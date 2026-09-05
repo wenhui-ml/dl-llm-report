@@ -1370,6 +1370,14 @@ $O(1)$ 压缩态通道 & 线性注意力 / SSM（Mamba）；RNN 遗产 & 第 2�
 
 这张表也解释了 2025--2026 年架构竞争的真实格局：\textbf{纯 SSM、纯注意力、纯检索都不是终点，“混合 + 外置”才是通往访问完备的工程路线}——Jamba 类混合架构、长上下文与 RAG 并用的生产组合、把推理深度转移到测试时的推理模型（第 7 章），都是在同一本“访问结构账”上的不同记账方式。事实上，2026 年的旗舰开源模型已经按这一蓝图收敛：Qwen3.5 的 Gated DeltaNet 线性注意力（压缩态）+ 稀疏注意力 MoE（逐字索引），与 DeepSeek-V4 的 token 压缩 + DSA（1M 上下文标配）不约而同走向“双通道混合体”——CCH 的“访问完备类”正在从理论类型变成架构竞争的显性终点。最后需要强调边界：CCH 的实验仍是小规模预注册测试，“领域级收敛”是猜想而非定理，且其结论限于无 CoT 的固定预算情形——但“能力由访问结构定价”这一视角，对理解第 11 章的算力--资本--生态格局与第 12 章的趋势判断，已经足够有力。
 
+\subsubsection{案例：GLM-5.3 的“后训练跃迁”能否用访问结构解释}
+
+2026 年 8 月，智谱 GLM-5.3 提供了一个值得用 CCH 语言拆解的现象：官方口径下\textbf{基座不变}，仅靠“后训练 scaling”——数十倍的长程任务环境、更多样的环境类型、超长的强化学习时长——就把编程与 agentic 能力较 GLM-5.2 推高约 50\%，成为编程最强开源模型，并以更低成本达到与 GPT-5.6 同级的智能；其小杯 \textbf{GLM-5.3-Flash}（320B 总参/18B 激活，GLM-5 系首个原生多模态）以旗舰 1/20 的定价，被第三方评测与厂商口径称为比肩 GPT-5.6 / Claude Opus 4.8 级旗舰——而后者据估计总参数大一个数量级以上。
+
+\textbf{CCH 能解释的部分}：CCH 的定价对象是\emph{能力类资格}，而非参数规模——表征由预训练收敛“免费赠予”（PRH），能力由访问结构“购买”。GLM-5.3 的后训练配方恰好在“购买访问结构的使用熟练度”：长程任务环境训练的是跨长上下文\emph{维持运行状态}（压缩态通道的可靠性），agentic 环境训练的是工具与检索结果的\emph{逐字回查}（外置逐字索引）与多步历史的工作集组装。当表征层已经收敛，“每 token 所需的激活计算”由查询类决定、而非由知识总量决定——知识躺在权重里，查询执行发生在访问结构上。于是 18B 激活 + 完备双通道即可获得\emph{同一能力类的成员资格}；数 T 参数是为长尾稳健性支付的溢价，那是\textbf{类内价格差而非类别差}。这与 CCH“能力收敛到访问完备混合体这一类、类内差异按墙付费”的图景一致，也解释了配方为何可复制：Qwen3.5 与 DeepSeek-V4 同期落入同一类（见上），GLM-5.3 并非孤例。
+
+\textbf{CCH 不能解释的部分（必须并置的三个因素）}：其一，\emph{蒸馏链}——GLM 系后训练环境大概率包含强模型生成的轨迹，等于经由数据通道“借用了”教师级能力，这在 CCH 的架构通道之外，也决定了跃迁的绝对高度被教师水平锁定（第 7 章蒸馏边界的再现）；其二，\emph{评测口径}——agentic/编程跑分依赖 harness（ZCode、OpenCode、Claude Code 等）与外部工具，“访问结构”部分由模型之外承载，且 10.1 节的基准污染与度量伪影警告在此同样适用；其三，\emph{CCH 自身的边界}——定理域限于无 CoT 的固定预算情形，“领域级收敛”仍是猜想。因此恰当的表述是：GLM-5.3 现象\emph{与 CCH 图景一致}，是“表征收敛免费、能力按访问结构定价”的一个支持性案例而非定理级证明；它更提示我们，2026 年“后训练跃迁”的三要素是\emph{环境规模 $\times$ 蒸馏质量 $\times$ 训练时长}——参数规模已退居第二序，而“访问结构的熟练使用”成为后训练真正在练的东西。
+
 \subsection{未来方向（2025--2030）}
 
 \begin{table}[htbp]
@@ -1417,8 +1425,8 @@ Meta & Llama 4（2025-04）$\to$ 下线 Llama API、转“开源+闭源”双轨
 xAI & Grok 3（02）$\to$ Grok 4（07，多智能体）$\to$ Grok 4.6（2026-08，长时程 Agent、超低价） & 10 万卡 Colossus；Grok 5 训练中（Colossus 2）\\
 DeepSeek & R1（01）$\to$ V3.2（2025-12，DSA）$\to$ \textbf{V4}（2026-04：Pro 1.6T-A49B / Flash 284B-A13B）$\to$ V4-Pro GA（08-13） & MLA、纯 RL 推理；1M 上下文标配，Agentic 编码开源 SOTA\\
 阿里 & Qwen3（04）$\to$ Qwen3-Coder（07）$\to$ \textbf{Qwen3.5}（2026-02，397B-A17B）$\to$ 3.5-Max 预览（03） & Qwen3-Next 混合架构；201 种语言；吞吐最高 19$\times$；开源矩阵最全\\
-月之暗面 & Kimi K2（07） & 1T 级 MoE 全量开源，开源榜第一\\
-智谱 & GLM-4.5（07）、2026-01 港股上市 & 大模型第一股\\
+月之暗面 & Kimi K2（2025-07）$\to$ K2.6 / K2.7 Code（Copilot 首个开源模型）$\to$ \textbf{K3}（2026-07 开源，kimi-k3-max Arena 综合第 10） & K3 引发“减速主义”之争；2026-09 秘密交表港交所（Pre-IPO 估值 500 亿美元）\\
+智谱（Z.AI） & GLM-4.5（07）、2026-01 港股上市 $\to$ \textbf{GLM-5.3}（2026-08：基座不变 + 后训练 scaling，编程最强开源）$\to$ GLM-5.3-Flash（320B-A18B 原生多模态，价格 1/20） & 大模型第一股；ARR 半年 15 倍至 \$1B；全栈国产算力；10.3 节有专节解读\\
 NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（\textbf{2026-09-03} 官宣） & 算力 + 生态纵向整合（HSR 审查中）\\
 IFM（MBZUAI） & \textbf{K2 Horizon}（2026-09）：0.9B--375B 六模型 & 全流程开源（数据/检查点/日志），小尺寸三档 SOTA；首创 MoVA\\
 \bottomrule
@@ -1455,9 +1463,9 @@ IFM（MBZUAI） & \textbf{K2 Horizon}（2026-09）：0.9B--375B 六模型 & 全�
   \item \textbf{2026 年 2 月}：Google 发布 Gemini 3.1 Pro（ARC-AGI-2 77.1\%，约为 3 Pro 两倍）；阿里除夕夜开源 \textbf{Qwen3.5}（397B-A17B，Qwen3-Next 混合架构，201 种语言），3 月再推 Qwen3.5-Max 预览版；
   \item \textbf{2026 年 4 月}：DeepSeek-\textbf{V4} 开源预览（Pro 1.6T/激活 49B、Flash 284B/激活 13B，1M 上下文成为全线标配）；
   \item \textbf{2026 年 5 月}：Google I/O 宣布“Agentic Gemini 时代”（Gemini 3.7）；Anthropic 于上半年推出新一代前沿系列 Fable 5 与 Mythos 5；
-  \item \textbf{2026 年 7 月}：\textbf{Claude Opus 5} 发布（每百万 token \$5/\$25 同价大升级，effort 档位可调）；Meta 宣布下线 Llama API、转向双轨；Anthropic 披露三起 Claude 未授权访问系统事件并邀 METR 独立审查；
-  \item \textbf{2026 年 8 月}：DeepSeek-V4-Pro 正式版 GA（合并推理/对话双模）；xAI Grok 4.6（长时程 Agent、价格下探）；Gemini 3.8 Flash Cyber 把“主动网络防御”做成产品；EU AI Act 高风险义务 8 月 2 日全面适用；
-  \item \textbf{2026 年 9 月初}：NVIDIA 官宣约 129 亿美元收购 Hugging Face（9 月 3 日）；IFM（MBZUAI）发布 K2 Horizon 六模型全流程开源全家桶；OpenAI 发布 \textbf{GPT-6 Astra}（ARC-AGI 约 99\%，称“AGI 时代开端”，同时首次触发 Critical 网络安全红线、承诺 10 亿美元网络防御）；Meta 新旗舰 Muse Spark 曝出逼平 Fable 5。
+  \item \textbf{2026 年 7 月}：\textbf{Claude Opus 5} 发布（每百万 token \$5/\$25 同价大升级，effort 档位可调）；Meta 宣布下线 Llama API、转向双轨；Anthropic 披露三起 Claude 未授权访问系统事件并邀 METR 独立审查；月之暗面开源 \textbf{Kimi K3}（后升至 Arena 综合前十；OpenAI 战略主管批其开源为“减速主义”，总裁 Brockman 回应“K3 确实不错”）；K2.6 因 DoorDash 采用而遭美国会两委员会调查——中国开源模型首次深度进入美国生产链；
+  \item \textbf{2026 年 8 月}：DeepSeek-V4-Pro 正式版 GA（合并推理/对话双模）；xAI Grok 4.6（长时程 Agent、价格下探）；Gemini 3.8 Flash Cyber 把“主动网络防御”做成产品；EU AI Act 高风险义务 8 月 2 日全面适用；智谱 \textbf{GLM-5.3}（基座不变 + 后训练 scaling：编程最强开源、较 5.2 +50%，权重 8 月底开源）与 \textbf{GLM-5.3-Flash}（320B-A18B 原生多模态、价格 1/20、全国产算力）相继发布；
+  \item \textbf{2026 年 9 月初}：NVIDIA 官宣约 129 亿美元收购 Hugging Face（9 月 3 日）；IFM（MBZUAI）发布 K2 Horizon 六模型全流程开源全家桶；OpenAI 发布 \textbf{GPT-6 Astra}（ARC-AGI 约 99\%，称“AGI 时代开端”，同时首次触发 Critical 网络安全红线、承诺 10 亿美元网络防御）；Meta 新旗舰 Muse Spark 曝出逼平 Fable 5；腾讯混元 Hy4 Preview 开源（770B-A49B、1M 上下文）；9 月 3 日海外主流 AI 服务集体宕机约 3.5 小时、国产服务未受影响。
 \end{itemize}
 
 \subsection{中国力量：从追赶到并跑}
@@ -1466,8 +1474,9 @@ IFM（MBZUAI） & \textbf{K2 Horizon}（2026-09）：0.9B--375B 六模型 & 全�
 \begin{itemize}
   \item \textbf{DeepSeek}：R1（RL 成本 29.4 万美元）$\to$ V3.1 / V3.2（混合思考、强代码、DSA 稀疏注意力）$\to$ \textbf{V4}（2026-04：Pro 1.6T/激活 49B、1M 上下文标配；8 月 V4-Pro 正式版）；以 MLA / MTP / FP8 / 无辅助损失 MoE / 稀疏注意力的架构-系统协同路线持续压低训练与推理成本，是两年间行业成本曲线的锚点；
   \item \textbf{阿里 Qwen}：Qwen3 全系开源（0.6B--235B，Apache 2.0，36T token、119 种语言）$\to$ \textbf{Qwen3.5}（2026-02：Gated DeltaNet 线性注意力 + 稀疏 MoE 的 Qwen3-Next 架构，397B-A17B、201 种语言、吞吐最高 19$\times$）与 Qwen3.5-Max 预览版；衍生模型生态为全球最大；
-  \item \textbf{月之暗面 Kimi}：K2 以 1T 级 MoE 全量开源并登顶开源榜，验证 Agentic 数据工程 + 大 MoE 路线；
-  \item \textbf{智谱 GLM}：GLM-4.5（355B MoE）开源，2026 年 1 月率先登陆港交所成为全球大模型第一股；
+  \item \textbf{月之暗面 Kimi}：K2 以 1T 级 MoE 全量开源并登顶开源榜，验证 Agentic 数据工程 + 大 MoE 路线 $\to$ K3（2026-07 开源，Arena 综合前十），K2.6 被 DoorDash 采用引发美国会调查——中国开源模型首次深度进入美国生产链；已启动港股 IPO（Pre-IPO 估值 500 亿美元）；
+  \item \textbf{智谱 GLM}：GLM-4.5（355B MoE）开源，2026 年 1 月率先登陆港交所成为全球大模型第一股 $\to$ \textbf{GLM-5.3}（基座不变 + 后训练 scaling，编程最强开源、较 5.2 +50%）与 GLM-5.3-Flash（320B-A18B 原生多模态、价格 1/20、全栈国产算力），ARR 半年增长 15 倍至 10 亿美元、1GW 国产芯片数据中心投运，公司更名 Z.AI（案例解读见 10.3 节）；
+  \item \textbf{腾讯混元}：Hy4 Preview 开源（2026-09：770B-A49B、1M 上下文），官方称“预训练与后训练并进”，重返开源第一梯队；
   \item \textbf{字节跳动}：豆包系产品用户量居国内首位，Seedream 4.0（图像生成/编辑一体化）与 Seedance 1.0（视频生成）在多模态侧形成竞争力；
   \item \textbf{MiniMax}：M1（长上下文混合架构）与海螺视频，2026 年 1 月上市首日市值破千亿港元。
 \end{itemize}
@@ -1704,7 +1713,9 @@ HumanEval/MBPP & — & 代码能力基准\\
   \item Google, 2026. \emph{Gemini 3.1 Pro}（2026-02）与 \emph{Gemini 3.8 Flash Cyber}（2026-08）官方博客；
   \item DeepSeek-AI, 2026. \emph{DeepSeek-V4 技术报告}（Hugging Face：deepseek-ai/DeepSeek-V4，DSA 与 1M 上下文；V4-Pro GA 2026-08-13）；
   \item Qwen Team, 2026. \emph{Qwen3.5} 技术博客（Qwen3-Next 混合架构，2026-02）；
-  \item IFM / MBZUAI, 2026. \emph{K2 Horizon} 全流程开源发布公告（Apache 2.0，2026-09）。
+  \item IFM / MBZUAI, 2026. \emph{K2 Horizon} 全流程开源发布公告（Apache 2.0，2026-09）；
+  \item Zhipu / Z.AI, 2026. \emph{GLM-5.3 / GLM-5.3-Flash} 技术博客与开源公告（2026-08，“基座不变 + 后训练 scaling”）；Moonshot AI, 2026. \emph{Kimi K3} 开源公告（2026-07）；
+  \item Tencent, 2026. \emph{Hunyuan Hy4 Preview} 开源公告（2026-09，770B-A49B、1M 上下文）。
 \end{itemize}
 
 \textbf{行业动态溯源}：各模型官方技术报告/系统卡（OpenAI、Anthropic、Google、Meta、DeepSeek、Qwen、Moonshot、智谱）；中文行业报道推荐机器之心、量子位与 36 氪 AI 频道；监管文本以网信办、欧盟委员会官网为准。
