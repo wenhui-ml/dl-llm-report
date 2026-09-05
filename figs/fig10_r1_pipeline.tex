@@ -1,0 +1,18 @@
+% fig10_r1_pipeline.tex — 图10 DeepSeek-R1 四阶段训练流水线
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig10_r1_pipeline} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[node distance=4mm,
+  rbox/.style={text width=56mm, align=center}]
+\node[gry, rbox] (base) {DeepSeek-V3-Base 基座};
+\node[blk, rbox, below=of base] (cs) {阶段一：冷启动 SFT（数千条长 CoT）};
+\node[grn, rbox, below=of cs] (rl1) {阶段二：推理 RL（GRPO + 规则奖励）};
+\node[blk, rbox, below=of rl1] (rs) {阶段三：拒绝采样 + SFT（80 万条样本）};
+\node[grn, rbox, below=of rs] (rl2) {阶段四：全场景 RL（有用性 + 无害性）};
+\node[orn, rbox, below=of rl2] (r1) {DeepSeek-R1};
+\draw[arr] (base)--(cs); \draw[arr] (cs)--(rl1); \draw[arr] (rl1)--(rs); \draw[arr] (rs)--(rl2); \draw[arr] (rl2)--(r1);
+\draw[rrr] (base.west) -- ++(-0.8cm,0) |- node[lab, pos=0.2, left, align=center] {R1-Zero：跳过 SFT\\ 直接 RL（涌现推理\\ 但语言混杂）} (rl1.west);
+\node[gry, rbox, below=4mm of r1, font=\small] (sm) {Qwen / Llama 1.5B--70B 共 6 个蒸馏模型（全部开源）};
+\draw[brr] (r1.east) -- ++(0.9cm,0) |- node[lab, pos=0.35, right, align=left] {蒸馏：60 万推理样本\\ + 20 万非推理样本\\ SFT 至小模型} (sm.east);
+\end{tikzpicture}

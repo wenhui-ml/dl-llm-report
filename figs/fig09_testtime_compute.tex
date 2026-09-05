@@ -1,0 +1,16 @@
+% fig09_testtime_compute.tex — 图9 Test-time Compute 收益曲线
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig09_testtime_compute} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}
+\begin{semilogxaxis}[width=0.8\textwidth, height=7.2cm, clip=false,
+  xlabel={思考 token 预算（对数刻度）}, ylabel={任务准确率（示意）},
+  xtick=\empty, ytick=\empty, axis lines=left, xmin=1, xmax=100000, ymin=0, ymax=100]
+\addplot[very thick, cblue, domain=1:100000, samples=200] {8 + 80*(1 - exp(-(ln(x))^1.5/28))};
+\addplot[thick, cgray, dashed, domain=1:100000] {90};
+\node[lab, anchor=south west, align=left] at (axis cs:2,92.8) {任务难度上界（可望不可即）};
+\node[lab, anchor=south east, align=left] at (axis cs:95000,82) {饱和区：成本翻倍、收益骤减};
+\node[lab, anchor=west, align=left] at (axis cs:60,10) {近似幂律区间：\\预算翻倍 $\to$ 准确率可观提升};
+\end{semilogxaxis}
+\end{tikzpicture}

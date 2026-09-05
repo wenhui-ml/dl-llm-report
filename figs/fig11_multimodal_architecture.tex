@@ -1,0 +1,24 @@
+% fig11_multimodal_architecture.tex — 图11 多模态大模型标准架构
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig11_multimodal_architecture} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}
+\node[gry, minimum width=24mm] (img) at (0,1.4) {图像 / 文档};
+\node[gry, minimum width=24mm] (vid) at (0,0) {视频（帧序列）};
+\node[gry, minimum width=24mm] (aud) at (0,-1.4) {音频};
+\node[blk, minimum width=28mm] (venc) at (3.2,1.0) {视觉编码器\\ ViT / ConvNeXt};
+\node[blk, minimum width=26mm] (aenc) at (3.2,-1.0) {音频编码器};
+\node[orn, minimum width=28mm] (proj) at (6.3,0) {投影层\\ 对齐到词表空间};
+\node[grn, minimum width=30mm, minimum height=13mm] (llm) at (9.7,0) {LLM Backbone\\（文本 token 直连）};
+\node[orn, minimum width=30mm] (out) at (13.4,0) {输出\\ 文本 · 动作 · 工具调用};
+\node[gry, minimum width=22mm] (txt) at (6.3,2.8) {文本 token};
+\draw[arr] (img)--(venc); \draw[arr] (vid)--(venc); \draw[arr] (aud)--(aenc);
+\draw[arr] (venc)--(proj); \draw[arr] (aenc)--(proj);
+\draw[arr] (txt) -- (proj);
+\draw[arr] (txt.east) to[bend left=22] (llm.70);
+\draw[arr] (proj)--(llm); \draw[arr] (llm)--(out);
+\node[lab, anchor=east] at (5.1,2.8) {拼接式（LLaVA 系）};
+\node[lab, anchor=west] at (10.0,2.0) {原生式（Gemini 系）};
+\node[lab] at (5.2,-3.0) {视觉 token 成本：一张 1024$^2$ 图 $\approx$ 数百至上千 token，是多模态请求成本的大头};
+\end{tikzpicture}

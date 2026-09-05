@@ -1,0 +1,25 @@
+% fig03_architecture_timeline.tex — 图3 架构演进时间线
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig03_architecture_timeline} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[x=1.25cm]
+\draw[arr] (-0.4,0) -- (14.5,0) node[lab, below left=0mm and -2mm] {年份};
+\foreach \i/\yr/\side/\sty/\txt in {
+  0/1998/1/gry/{LeNet\\CNN 时代开启},
+  1/2012/-1/gry/{AlexNet\\深度学习爆发},
+  2/2014/1/gry/{Seq2Seq+注意力\\RNN 时代雏形},
+  3/2015/-1/gry/{ResNet\\残差连接},
+  4/2017/1/blk/{\textbf{Transformer}\\范式革命},
+  5/2018/-1/blk/{BERT / GPT-1\\预训练+微调},
+  6/2020/1/blk/{GPT-3\\上下文学习涌现},
+  7/2022/-1/orn/{ChatGPT\\对齐走向产品},
+  8/2023/1/blk/{LLaMA / GPT-4\\开源与多模态},
+  9/2024/-1/orn/{o1 / DeepSeek-V2\\推理模型元年},
+  10/2025/1/orn/{R1 / Qwen3 / GPT-5\\开源推理普惠},
+  11/2026/-1/orn/{Agentic·世界模型\\从对话到行动}} {
+  \node[\sty, font=\scriptsize, align=center] at (\i*1.25, \side*1.5) {\txt};
+  \draw[cgray, thin] (\i*1.25,0) -- (\i*1.25, \side*0.55);
+  \node[lab, font=\scriptsize] at (\i*1.25, -\side*0.4) {\yr};
+}
+\end{tikzpicture}

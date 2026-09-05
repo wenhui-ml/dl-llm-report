@@ -1,0 +1,26 @@
+% fig07_moe_layer.tex — 图7 MoE 层工作机制
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig07_moe_layer} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}
+\node[gry, minimum width=20mm] (x) {输入 token $\mathbf{x}$};
+\node[orn, right=7mm of x, minimum width=22mm, align=center] (r) {Router\\ 打分 + Top-$K$ 选择};
+\foreach \i/\xa/\ya/\st in {
+  1/2.55/1.35/gry, 2/3.95/1.35/orn, 3/2.55/0.45/gry, 4/3.95/0.45/gry,
+  5/2.55/-0.45/orn, 6/3.95/-0.45/gry, 7/2.55/-1.35/gry, 8/3.95/-1.35/gry} {
+  \node[\st, minimum width=12mm, minimum height=7.5mm, font=\small] (e\i) at ($(r.east)+(\xa,\ya)$) {专家\i};
+}
+\node[grn, minimum width=24mm, font=\small] (sh) at ($(r.east)+(3.25,2.45)$) {共享专家（恒激活）};
+\node[gry, minimum width=29mm, align=center] (agg) at ($(r.east)+(6.7,0)$) {加权合并\\ $\sum_{i\in\text{Top-}K}\alpha_i E_i(\mathbf{x})$};
+\node[gry, minimum width=15mm, right=4mm of agg] (o) {输出};
+\foreach \i in {1,3,4,6,7,8} \draw[cgray!55, thin, dotted] (r.east) -- (e\i.west);
+\draw[rrr] (r.east) -- (e2.west);
+\draw[rrr] (r.east) -- (e5.west);
+\draw[brr] (r.east) -- ++(0.9cm,0) |- (sh.west);
+\draw[rrr] (e2.east) -- (agg.west);
+\draw[rrr] (e5.east) -- (agg.west);
+\draw[brr] (sh.east) -- (agg.north west);
+\draw[arr] (x)--(r); \draw[arr] (agg)--(o);
+\node[lab, below=3.5mm of e7, xshift=5mm, align=center] {示意：8 选 2 + 1 共享；\\ DeepSeek-V3 实际为 256 选 8 + 1 共享\\ （Qwen3 为 128 选 8、无共享专家）};
+\end{tikzpicture}

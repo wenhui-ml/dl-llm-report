@@ -1,0 +1,18 @@
+% fig08_inference_system.tex — 图8 LLM 推理系统全景
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig08_inference_system} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[node distance=6mm]
+\node[gry, minimum width=18mm] (req) {用户请求};
+\node[blk, right=6mm of req, minimum width=27mm] (pre) {Prefill 预填充\\ 整段 prompt 并行};
+\node[orn, right=6mm of pre, minimum width=20mm] (kv) {KV Cache};
+\node[grn, right=6mm of kv, minimum width=27mm] (dec) {Decode 解码\\ 逐 token 自回归};
+\node[gry, right=6mm of dec, minimum width=14mm] (res) {响应};
+\draw[arr] (req)--(pre); \draw[arr] (pre)--(kv); \draw[arr] (kv)--(dec); \draw[arr] (dec)--(res);
+\draw[rrr] (dec.north) to[bend right=22] node[lab, above, pos=0.5] {每步读写 KV（访存受限）} (kv.north);
+\node[lab, below=3mm of pre] {计算受限 · 拼算力：FlashAttention、算子融合、FP8};
+\node[lab, below=3mm of dec] {访存受限 · 拼带宽：量化、投机解码};
+\node[gry, minimum width=126mm, minimum height=9mm, below=17mm of kv, font=\small] (svc) {服务层：Continuous Batching · PagedAttention · Prefix 复用 · 量化 · 投机解码};
+\node[lab, below=1.5mm of svc] {所有请求共享同一套引擎与显存池，调度策略决定吞吐与延迟的平衡};
+\end{tikzpicture}

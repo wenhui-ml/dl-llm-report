@@ -1,0 +1,15 @@
+% fig01_macro_architecture.tex — 图1 报告宏观架构
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig01_macro_architecture} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[node distance=4mm,
+  layerbox/.style={lay, text width=106mm, minimum height=10mm, align=center}]
+\node[layerbox] (top) {\textbf{生态与展望}（第 11--12 章）\\ 行业动态 · 竞争格局 · 总结与趋势判断};
+\node[layerbox, below=of top] (gov) {\textbf{规律与治理}（第 9--10 章）\\ 安全对齐与防御纵深 · Scaling Laws · 能力收敛假说（CCH）};
+\node[layerbox, below=of gov] (cap) {\textbf{能力扩展}（第 7--8 章）\\ 推理模型（System 2） · 多模态大模型};
+\node[layerbox, below=of cap] (sys) {\textbf{模型与系统}（第 3--6 章）\\ Transformer · 训练流水线 · MoE/GQA/MLA · 推理优化};
+\node[layerbox, below=of sys] (base) {\textbf{数理与架构基础}（第 1--2 章）\\ 数学与优化 · CNN/RNN $\to$ Transformer};
+\draw[brr] ($(base.west)+(-8mm,0)$) -- ($(top.west)+(-8mm,0)$);
+\node[lab, rotate=90, anchor=south] at ($(base.west)!0.5!(top.west)+(-8mm,0)$) {自底向上 · 逐层依赖};
+\end{tikzpicture}

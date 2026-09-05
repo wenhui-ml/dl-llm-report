@@ -1,0 +1,39 @@
+% fig02_neuron_views.tex — 图2 深度学习的三个基本视图
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig02_neuron_views} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}
+% ---------- (a) 单神经元 ----------
+\node[gry, minimum width=9mm] (x1) at (1.7, 0.85) {$x_1$};
+\node[gry, minimum width=9mm] (x2) at (1.7, 0) {$x_2$};
+\node[gry, minimum width=9mm] (x3) at (1.7, -0.85) {$x_3$};
+\node[blk, align=center] (sum) at (3.9, 0) {加权和\\ $z=\mathbf{w}^{\top}\mathbf{x}+b$};
+\node[grn, minimum width=9mm] (act) at (6.0, 0) {$\sigma$};
+\node[gry, minimum width=9mm] (out) at (7.7, 0) {$a$};
+\draw[arr] (x1.east) -- (sum.west);
+\draw[arr] (x2.east) -- (sum.west);
+\draw[arr] (x3.east) -- (sum.west);
+\draw[arr] (sum) -- (act);
+\draw[arr] (act) -- (out);
+\node[lab] at (4.65, -1.55) {(a) 人工神经元：加权和 + 非线性};
+% ---------- (b) 计算图与反向传播 ----------
+\node[gry, minimum width=9mm] (bx) at (9.2, 0) {$\mathbf{x}$};
+\node[blk, minimum width=13mm] (bl) at (10.8, 0) {线性层};
+\node[grn, minimum width=11mm] (ba) at (12.5, 0) {激活};
+\node[blk, minimum width=13mm] (bo) at (14.2, 0) {输出层};
+\node[orn, minimum width=13mm] (bl2) at (15.9, 0) {损失 $L$};
+\draw[arr] (bx)--(bl); \draw[arr] (bl)--(ba); \draw[arr] (ba)--(bo); \draw[arr] (bo)--(bl2);
+\draw[rrr] (bl2.north) to[bend right=28] node[lab, above, pos=0.5] {反向：$\partial L/\partial\theta$ 沿链式法则逐层回传} (bl.north);
+\node[lab] at (12.4, -1.55) {(b) 计算图：前向算值，反向归因};
+% ---------- (c) 多层感知机（与上行整体居中） ----------
+\node[lab] at (6.6, -2.7) {输入层};
+\node[lab] at (8.9, -2.7) {隐藏层};
+\node[lab] at (11.2, -2.7) {输出层};
+\foreach \i in {1,2,3} \node[circle, draw=cgray, fill=cgray!8, minimum size=7mm] (mi\i) at (6.6, -3.35-0.95*\i) {};
+\foreach \i in {1,2,3,4} \node[circle, draw=cblue, fill=cblue!8, minimum size=7mm] (mh\i) at (8.9, -2.9-0.95*\i) {};
+\foreach \i in {1,2} \node[circle, draw=cgreen!70!black, fill=cgreen!8, minimum size=7mm] (mo\i) at (11.2, -3.35-1.4*\i) {};
+\foreach \a in {1,2,3} \foreach \b in {1,2,3,4} \draw[cgray!50, thin] (mi\a) -- (mh\b);
+\foreach \a in {1,2,3,4} \foreach \b in {1,2} \draw[cgray!50, thin] (mh\a) -- (mo\b);
+\node[lab] at (8.9, -7.75) {(c) 多层感知机：层间全连接，“深度”来自层层复合};
+\end{tikzpicture}

@@ -1,0 +1,21 @@
+% fig05_attention_pipeline.tex — 图5 自注意力计算流水线
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig05_attention_pipeline} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[node distance=6mm]
+\node[gry] (x) {输入 $X$};
+\node[blk, right=6mm of x, minimum width=27mm] (p) {三路线性投影\\ 得到 $Q,\;K,\;V$};
+\node[blk, right=6mm of p, minimum width=27mm] (mm) {相似度矩阵\\ $QK^\top/\sqrt{d_k}$};
+\node[grn, right=6mm of mm, minimum width=22mm] (sm) {Softmax\\ 注意力权重};
+\node[grn, below=10mm of sm, minimum width=23mm] (av) {加权求和\\ $\text{Attn}\cdot V$};
+\node[blk, left=6mm of av, minimum width=21mm] (h1) {单头输出};
+\node[blk, left=6mm of h1, minimum width=26mm] (cat) {Concat（$h$ 头并行）};
+\node[orn, left=6mm of cat, minimum width=22mm] (o) {$W^O$ 输出};
+\draw[arr] (x)--(p); \draw[arr] (p)--(mm); \draw[arr] (mm)--(sm);
+\draw[arr] (sm.south) -- (av.north);
+\draw[arr] (av)--(h1); \draw[arr] (h1)--(cat); \draw[arr] (cat)--(o);
+\node[lab, above=0.5mm of p] {$h$ 个头各自独立执行这整条流水线（互不干扰）};
+\node[lab, below=1mm of mm] {$n\times n$ 矩阵：$O(n^2)$ 复杂度的来源};
+\node[lab, below=1mm of o] {输出返回残差流};
+\end{tikzpicture}

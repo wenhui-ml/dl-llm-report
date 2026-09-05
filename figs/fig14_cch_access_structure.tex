@@ -1,0 +1,21 @@
+% fig14_cch_access_structure.tex — 图14 CCH 双通道访问结构与三堵墙
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig14_cch_access_structure} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}
+  \node[blk, align=center] (stream) at (0,0) {\textbf{无限 token 流}\\ $\cdots\bullet$ 苹果落地 $\bullet\cdots$\\ {\scriptsize 查询：跟踪 $+$ 回查}};
+  \node[orn, align=center] (sigma) at (3.5,0) {\textbf{可访问状态} $\Sigma$\\ 瓶颈容量 $B$ 比特\\ {\scriptsize 固定每 token 预算}};
+  \node[grn, align=center] (cha) at (7.2,1.35) {\textbf{压缩态通道}\\ $O(1)$：SSM/RNN 递归态\\ {\scriptsize 擅长跟踪，弱逐字回查}};
+  \node[dgt, align=center] (chb) at (7.2,-1.35) {\textbf{逐字索引通道}\\ KV Cache · 外置索引\\ {\scriptsize 擅长回查，弱窗外复合}};
+  \foreach \x/\nm in {9.35/香农墙, 10.0/视界墙, 10.65/电路墙}{
+    \draw[dashed, very thick, red!65!black] (\x,-2.45) -- (\x,2.45);
+    \node[lab, rotate=90] at (\x-0.26,0) {\nm};
+  }
+  \node[grn, align=center] (hybrid) at (12.6,0) {\textbf{访问完备混合体}\\ 双通道，按墙付费\\ $\Rightarrow$ 能力超可加};
+  \draw[brr] (stream) -- (sigma);
+  \draw[brr] (sigma.east) -- (cha.west);
+  \draw[brr] (sigma.east) -- (chb.west);
+  \draw[brr] (cha.east) -- (hybrid.west);
+  \draw[brr] (chb.east) -- (hybrid.west);
+\end{tikzpicture}

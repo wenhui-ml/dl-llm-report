@@ -1,0 +1,18 @@
+% fig12_defense_in_depth.tex — 图12 多层防御纵深
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig12_defense_in_depth} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[node distance=5.5mm]
+\node[gry, minimum width=23mm] (u) {用户 / Agent};
+\node[blk, right=5mm of u, minimum width=32mm, align=center] (in) {输入侧防御\\ 提示注入检测 · 权限最小化};
+\node[grn, right=5mm of in, minimum width=36mm, align=center] (m) {模型\\（对齐已内化：SFT·RLHF·宪法）};
+\node[blk, right=5mm of m, minimum width=32mm, align=center] (out2) {输出侧防御\\ 分类器 · 标识 · 置信度};
+\node[gry, right=5mm of out2, minimum width=17mm] (r) {响应 / 执行};
+\draw[arr] (u)--(in); \draw[arr] (in)--(m); \draw[arr] (m)--(out2); \draw[arr] (out2)--(r);
+\node[orn, below=11mm of m, minimum width=96mm, align=center] (rt) {持续红队：自动化攻击库（越狱 / 注入模板）+ 人工专家对抗};
+\draw[rrr] (rt.north) -- (in.south east);
+\draw[rrr] (rt.north) -- (m.south);
+\draw[rrr] (rt.north) -- (out2.south west);
+\node[lab, below=1.5mm of rt] {发现的漏洞回流为训练数据与过滤规则——防御是循环，不是关卡};
+\end{tikzpicture}

@@ -1,0 +1,23 @@
+% fig04_transformer_block.tex — 图4 现代 decoder-only Transformer Block
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 抽取，经 \input{figs/fig04_transformer_block} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[node distance=4.5mm]
+\node[gry, minimum width=62mm] (inp) {输入：Token Embedding + 位置信息（RoPE）};
+\node[blk, below=of inp, minimum width=48mm] (n1) {RMSNorm（Pre-Norm）};
+\node[grn, below=of n1, minimum width=48mm] (attn) {多头自注意力（因果掩码）};
+\node[gry, below=of attn, minimum width=48mm, minimum height=5.5mm, inner sep=2pt] (add1) {$\oplus$ 残差合并};
+\node[blk, below=of add1, minimum width=48mm] (n2) {RMSNorm（Pre-Norm）};
+\node[grn, below=of n2, minimum width=48mm] (ffn) {前馈网络 SwiGLU FFN};
+\node[gry, below=of ffn, minimum width=48mm, minimum height=5.5mm, inner sep=2pt] (add2) {$\oplus$ 残差合并};
+\node[orn, below=of add2, minimum width=48mm] (out) {LM Head + Softmax $\to$ 下一 token 分布};
+\draw[arr] (inp)--(n1); \draw[arr] (n1)--(attn); \draw[arr] (attn)--(add1);
+\draw[arr] (add1)--(n2); \draw[arr] (n2)--(ffn); \draw[arr] (ffn)--(add2); \draw[arr] (add2)--(out);
+\draw[brr] (inp.east) -- ++(1.4cm,0) |- (add1.east);
+\draw[brr] (add1.east) -- ++(0.7cm,0) |- (add2.east);
+\draw[decorate, decoration={brace, amplitude=7pt, mirror}, thick, cgray] ($(n1.north west)+(-3mm,0)$) -- ($(add2.south west)+(-3mm,0)$);
+\node[lab, left=4mm of add1, align=center] {$\times\,N$ 层堆叠\\（LLaMA-2 70B：$N{=}80$）};
+\node[lab, right=4mm of attn, align=left] {KV Cache 产生地\\（第 6 章优化的对象）};
+\node[lab, right=4mm of ffn, align=left] {参数占全模型约 $2/3$\\（知识存储主体，MoE 改造对象）};
+\end{tikzpicture}
