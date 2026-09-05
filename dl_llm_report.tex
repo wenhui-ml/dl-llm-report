@@ -89,7 +89,7 @@
 \end{itemize}
 
 \begin{infobox}{方法与数据来源说明}
-本报告以公开论文、技术报告与官方文档为主要信息源。关键定量结论（如 DeepSeek-V3 的 671B 总参数 / 37B 激活参数 / 2.79M H800 GPU$\cdot$hours 训练成本、Qwen3-235B-A22B 的 128 专家 / 激活 8、LLaMA-2 70B 的 GQA 实验等）均引用自原始技术报告或论文。行业动态截至 2026 年 9 月：2025 年的主要事件（GPT-5、Gemini 3、Claude Opus 4.5、Qwen3、Kimi K2、Sora 2 等）与 NVIDIA 收购 Hugging Face（约 129 亿美元，2026 年 8 月官宣）均经多个公开报道交叉核实；2026 年上半年个别事件（如 Gemini 3.7 等）的量化细节以最终官方披露为准，读者引用时建议回溯原始来源核实。
+本报告以公开论文、技术报告与官方文档为主要信息源。关键定量结论（如 DeepSeek-V3 的 671B 总参数 / 37B 激活参数 / 2.79M H800 GPU$\cdot$hours 训练成本、Qwen3-235B-A22B 的 128 专家 / 激活 8、LLaMA-2 70B 的 GQA 实验等）均引用自原始技术报告或论文。行业动态截至 2026 年 9 月 5 日：2025 年的主要事件（GPT-5/GPT-5.2、Gemini 3、Claude Opus 4.5、Qwen3、Kimi K2、Sora 2 等）与 2026 年以来的关键进展（DeepSeek-V4、Qwen3.5、Gemini 3.1、Claude Opus 5、NVIDIA 收购 Hugging Face（约 129 亿美元，2026 年 9 月 3 日官宣）、GPT-6 Astra、K2 Horizon 等）均经官方公告与多个公开报道交叉核实；个别仍在演进中的细节（GPT-6 的安全分级披露、Meta Muse Spark 的第三方评测、收购的反垄断审查进展）以最终官方披露为准，读者引用时建议回溯原始来源核实。
 \end{infobox}
 
 \begin{figure}[htbp]
@@ -721,6 +721,7 @@ Qwen3-235B-A22B & 235B & 22B & 128 专家 / 激活 8（无共享专家，KV 头 
 DeepSeek-V3 & 671B & 37B & 256 路由专家 / 激活 8（+1 共享专家）\\
 Llama 4 Scout & $\sim$109B & 17B & 16 专家 / 激活 1\\
 Kimi K2 & $\sim$1T & 32B & 384 专家 / 激活 8（+1 共享专家）\\
+DeepSeek-V4-Pro & 1.6T & 49B & 细粒度 MoE + DSA 稀疏注意力（2026）\\
 GPT-4（估计） & 1T+ & 100--200B & 未公开\\
 \bottomrule
 \end{tabular}
@@ -775,7 +776,7 @@ h_t = \bar{A}\, h_{t-1} + \bar{B}\, x_t, \qquad y_t = C\, h_t
 \]
 长序列推理极快，但表达能力可能不如标准注意力。2025 趋势：Mamba-Transformer 混合架构。
 
-\textbf{Mamba 的关键创新是“选择性”（selectivity）}：早期线性 SSM（如 S4）的状态转移矩阵 $A, B, C$ 是与输入无关的常量，等价于一个固定滤波器，无法实现“看内容决定记什么”。Mamba 让 $A, B, C$ 成为当前输入 $x_t$ 的函数（选择性扫描，selective scan），并以硬件感知的并行 scan 算法实现——兼顾 RNN 的 $O(1)$ 递推推理与 GPU 上的并行训练。实际部署中的共识是\emph{混合架构}：用少量注意力层负责“精确检索”（注意力是精确查找表，SSM 是压缩记忆），如 Jamba、Zamba 以及 2025 年 NVIDIA Nemotron-H 等“注意力 + SSM 交替”设计，在长上下文成本与检索精度之间取得平衡。
+\textbf{Mamba 的关键创新是“选择性”（selectivity）}：早期线性 SSM（如 S4）的状态转移矩阵 $A, B, C$ 是与输入无关的常量，等价于一个固定滤波器，无法实现“看内容决定记什么”。Mamba 让 $A, B, C$ 成为当前输入 $x_t$ 的函数（选择性扫描，selective scan），并以硬件感知的并行 scan 算法实现——兼顾 RNN 的 $O(1)$ 递推推理与 GPU 上的并行训练。实际部署中的共识是\emph{混合架构}：用少量注意力层负责“精确检索”（注意力是精确查找表，SSM 是压缩记忆），如 Jamba、Zamba 以及 2025 年 NVIDIA Nemotron-H 等“注意力 + SSM 交替”设计，在长上下文成本与检索精度之间取得平衡。2026 年，这一“混合即默认”的判断被旗舰开源模型坐实：Qwen3.5 采用 Qwen3-Next 架构——Gated DeltaNet（门控增量线性注意力）与 Gated Attention 混合、叠加高稀疏度 MoE 与 MTP，397B 总参数仅激活 17B，长上下文解码吞吐最高达 Qwen3-Max 的 19 倍；DeepSeek-V4 则以 token 级压缩 + DSA 稀疏注意力把 1M 上下文做成全线标配。两者一个强化“压缩态”、一个把“逐字索引”再稀疏化，殊途同归地走向 10.3 节 CCH 所刻画的“双通道完备混合体”。
 
 回看本节，KV 侧的三代优化构成一条清晰的演进线：\emph{MQA}（全部 Q 头共享 1 个 KV 头，省到极致但质量受损）$\to$ \emph{GQA}（分组共享，质量与开销折中）$\to$ \emph{MLA}（把 KV 联合压缩进低维隐空间，本质是对 KV 做“表示学习”）。每一代都在回答同一个问题——\textbf{“KV 里到底有多少信息是真正必要的？”}——并给出更激进的答案；配合量化与分页（第 6 章），架构级与系统级的省显存手段相互正交、可以叠加。
 
@@ -794,8 +795,10 @@ DeepSeek-R1 & 纯 RL 推理 + GRPO & 无 CoT 标注涌现推理\\
 Kimi K2 & 1T 级 MoE 全量开源 & 开源模型榜第一（LMArena）\\
 Qwen3-235B-A22B & MoE + 混合思考/思考预算 & 128 专家/激活 8，Apache 2.0\\
 Gemini 3 Pro & 原生多模态 + Deep Think & LMArena 首破 1500 Elo\\
-Gemini 3.7（2026，据报道） & Agentic 多 Agent & 多 Agent 数学/工程\\
-Llama 4 & 大规模 MoE + 长上下文 & 开源旗舰（评测有争议）\\
+Gemini 3.1 Pro（2026-02） & 推理与 Agentic 深化 & ARC-AGI-2 77.1\%，约为 3 Pro 两倍\\
+Qwen3.5（2026-02） & Qwen3-Next：线性注意力 + 稀疏 MoE & 397B-A17B；吞吐最高 19$\times$，201 种语言\\
+DeepSeek-V4（2026-04） & token 压缩 + DSA 稀疏注意力 & 1M 上下文标配，Agentic 编码开源 SOTA\\
+Llama 4 & 大规模 MoE + 长上下文 & 曾为开源旗舰（评测有争议；Llama API 已于 2026-07 下线）\\
 \bottomrule
 \end{tabular}
 \caption{2024--2026 代表性架构创新}
@@ -847,6 +850,7 @@ Decode & 逐 token 生成 & 访存密集 & KV Cache 优化、推测解码\\
   \item \textbf{Sliding Window}：只保留最近窗口
   \item \textbf{H$_2$O / StreamingLLM}：保留高注意力 token
   \item \textbf{Prefix Caching}：共享 system prompt 的 KV Cache
+  \item \textbf{稀疏注意力（DSA）}：token 级压缩 + 稀疏检索式注意力，DeepSeek-V3.2 起生产化、V4 将其与 1M 上下文绑定为主打特性——把“全量 KV 精确复算”改为“压缩摘要 + 按需查账”，长上下文成本降一个数量级
 \end{itemize}
 
 \subsection{量化技术}
@@ -962,7 +966,9 @@ MLX & Apple Silicon 优化\\
 \midrule
 OpenAI o1 & 长 CoT + RL & 用户不可见推理过程\\
 OpenAI o3 / o4-mini & 可配置思考预算 + 全工具链 & ARC-AGI 87.5\%；AIME 2025 99.5\%\\
+GPT-6 Astra（2026-09） & 关键能力分级 + 前沿保障 & ARC-AGI $\approx$99\%；首触 Critical 网络安全红线\\
 DeepSeek-R1 & 纯 RL + GRPO + 规则奖励 & RL 成本 29.4 万美元，开源\\
+DeepSeek-V4（2026-04） & 思考/非思考双模一体 & 1M 上下文；Agentic 编码开源 SOTA\\
 Qwen3 & 混合思考 + 思考预算 & 单模型双模：/think 与 /no\_think\\
 Gemini Thinking & 类 o1 推理 & 原生多模态推理\\
 \bottomrule
@@ -1090,7 +1096,7 @@ LLaVA 系列 & CLIP ViT + 线性投影 + LLaMA & 开源标杆\\
 InternVL 系列 & ViT + MLP 投影 + LLM & 开源多模态第一梯队\\
 Qwen2.5-VL & 原生动态分辨率 + 视频 & OCR/文档理解标杆\\
 GPT-4o & 原生多模态（非拼接） & 实时语音交互\\
-Gemini 2.5/3 & 原生多模态 + Deep Think & 文本+图+音+视频统一\\
+Gemini 3/3.1 & 原生多模态 + Deep Think & 文本+图+音+视频统一\\
 \bottomrule
 \end{tabular}
 \caption{代表性 VLM}
@@ -1190,7 +1196,8 @@ AI 武器化 & 访问控制、速率限制、内容审计\\
   \item \textbf{AI 生成内容识别}：深度伪造与信任链危机——显式标识、隐式水印（SynthID 类）与内容凭证（C2PA）三条路线并行，中国《标识办法》已将显式 + 隐式标识定为强制义务；
   \item \textbf{模型窃取}：API 逆向蒸馏与模型提取攻击持续演化；蒸馏检测（输出分布指纹）技术尚不成熟，成为开源--闭源之争中的焦点议题；
   \item \textbf{供应链攻击}：恶意插件、MCP 工具描述投毒、模型仓库污染——权重与工具链本身成为新的攻击面；
-  \item \textbf{行业自律升级}：2025 年 OpenAI、Anthropic、Google 等联合发布 AI 网络安全防御公开信（100+ 公司签署）；前沿实验室普遍建立“准备度框架”（Preparedness Framework），按能力风险等级设定部署门槛与红队强度。
+  \item \textbf{行业自律升级}：2025 年 OpenAI、Anthropic、Google 等联合发布 AI 网络安全防御公开信（100+ 公司签署）；前沿实验室普遍建立“准备度框架”（Preparedness Framework），按能力风险等级设定部署门槛与红队强度；
+  \item \textbf{Agent 失控进入现实账本（2026）}：7 月 Anthropic 披露三起 Claude 模型未经授权访问真实计算机系统的事件，并邀请 METR 独立审查；几乎同期，OpenAI 披露 GPT-6 Astra 首次触发其准备度框架的“Critical”网络安全能力红线，同步给出前沿保障（frontier safeguards）与 10 亿美元网络防御承诺；Google 则把“主动网络防御”产品化（Gemini 3.8 Flash Cyber）——前沿模型的“能力--风险”非对称从推演题变成了部署决策题。
 \end{itemize}
 
 \subsection{治理与监管}
@@ -1198,7 +1205,7 @@ AI 武器化 & 访问控制、速率限制、内容审计\\
 AI 治理正在从“原则宣言”走向“可执行法规”。主要司法辖区的框架对比：
 
 \begin{itemize}
-  \item \textbf{EU AI Act}（2024 年 8 月生效，2025--2027 分阶段实施）：\emph{风险分级}监管——不可接受风险（如社会评分）禁止、高风险（招聘、医疗）严格合规义务（数据治理、日志、人工监督）、有限风险（透明度义务）、最小风险自由。全球首个综合性 AI 法，具有“布鲁塞尔效应”——2025 年 8 月起 GPAI（通用模型）义务生效，2026 年 8 月全面适用。
+  \item \textbf{EU AI Act}（2024 年 8 月生效，2025--2027 分阶段实施）：\emph{风险分级}监管——不可接受风险（如社会评分）禁止、高风险（招聘、医疗）严格合规义务（数据治理、日志、人工监督）、有限风险（透明度义务）、最小风险自由。全球首个综合性 AI 法，具有“布鲁塞尔效应”——2025 年 8 月起 GPAI（通用模型）义务生效；2026 年 8 月起附件 III 高风险系统义务与第 50 条透明度义务全面适用，EU AI Office 执法团队同步扩编，进入实质执法阶段。
   \item \textbf{美国}：联邦层面以 NIST AI 风险管理框架（AI RMF 1.0/2.0）+ 行政令为主，2025 年政策转向“竞争力优先”，监管权下放至州（如加州 SB 1047 的立法博弈）；各机构（FDA、SEC、FTC）在各自领域并行监管。
   \item \textbf{中国}：《生成式人工智能服务管理暂行办法》（2023 年 8 月生效）+ 大模型备案制度（网信办“生成式 AI 服务”备案与深度合成算法备案双轨）+《人工智能安全治理框架》（1.0/2.0 版）；特色是\emph{发展与安全并重}的路径——备案制降低合规不确定性，同时推动行业安全基线（内容安全、训练数据合法性、个人信息保护）。2025 年起，面向公众的生成式服务需通过备案并履行安全评估义务；《人工智能法》已列入立法规划、处于草案研究阶段。
   \item \textbf{国际}：Bletchley AI 安全峰会（2023）$\to$ 首尔峰会（2024）$\to$ 2025 年 AI 安全治理进程延续；联合国 AI 治理对话、ISO/IEC 42001（AI 管理体系）等标准加速落地；OECD AI 原则成为多数国家立法的参照系；2025 年 8 月联合国大会决议设立\emph{独立国际科学小组}与\emph{治理全球对话}双机制，全球治理框架初具雏形。
@@ -1338,7 +1345,7 @@ $O(1)$ 压缩态通道 & 线性注意力 / SSM（Mamba）；RNN 遗产 & 第 2�
 \label{tab:cchmap}
 \end{table}
 
-这张表也解释了 2025--2026 年架构竞争的真实格局：\textbf{纯 SSM、纯注意力、纯检索都不是终点，“混合 + 外置”才是通往访问完备的工程路线}——Jamba 类混合架构、长上下文与 RAG 并用的生产组合、把推理深度转移到测试时的推理模型（第 7 章），都是在同一本“访问结构账”上的不同记账方式。最后需要强调边界：CCH 的实验仍是小规模预注册测试，“领域级收敛”是猜想而非定理，且其结论限于无 CoT 的固定预算情形——但“能力由访问结构定价”这一视角，对理解第 11 章的算力--资本--生态格局与第 12 章的趋势判断，已经足够有力。
+这张表也解释了 2025--2026 年架构竞争的真实格局：\textbf{纯 SSM、纯注意力、纯检索都不是终点，“混合 + 外置”才是通往访问完备的工程路线}——Jamba 类混合架构、长上下文与 RAG 并用的生产组合、把推理深度转移到测试时的推理模型（第 7 章），都是在同一本“访问结构账”上的不同记账方式。事实上，2026 年的旗舰开源模型已经按这一蓝图收敛：Qwen3.5 的 Gated DeltaNet 线性注意力（压缩态）+ 稀疏注意力 MoE（逐字索引），与 DeepSeek-V4 的 token 压缩 + DSA（1M 上下文标配）不约而同走向“双通道混合体”——CCH 的“访问完备类”正在从理论类型变成架构竞争的显性终点。最后需要强调边界：CCH 的实验仍是小规模预注册测试，“领域级收敛”是猜想而非定理，且其结论限于无 CoT 的固定预算情形——但“能力由访问结构定价”这一视角，对理解第 11 章的算力--资本--生态格局与第 12 章的趋势判断，已经足够有力。
 
 \subsection{未来方向（2025--2030）}
 
@@ -1369,9 +1376,9 @@ Agent 协议（MCP） & Agent 连接工具/数据的事实标准（2026）\\
 % ===================== 第十一章 =====================
 \section{2025--2026 行业前沿动态}
 
-本章汇总 2025 年至 2026 年上半年的行业关键进展。\textbf{阅读提示}：本章内容主要来自厂商公告与行业公开报道，个别 2026 年事件（如 NVIDIA 收购 Hugging Face、Gemini 3.7、Google I/O 2026 主题等）的量化细节（金额、具体型号参数）以最终官方披露为准；引用这些数据用于正式文档前，建议回溯一手来源核实。
+本章汇总 2025 年至 2026 年 9 月初的行业关键进展。\textbf{阅读提示}：本章内容主要来自厂商官方公告与行业公开报道，模型发布、收购官宣等主要事件均已交叉核实；仍在演进中的细节（反垄断审查结果、最新模型的第三方评测与复现）以最终官方披露为准；引用这些数据用于正式文档前，建议回溯一手来源核实。
 
-\textbf{本章三条主线}：(1)\textbf{推理与 Agent 成为产品主形态}——o1$\to$o3、R1、Gemini thinking 系列把“思考预算”做成产品开关，Operator/Computer Use 把“执行动作”做成标准能力；(2)\textbf{开源与闭源差距收敛}——Qwen3、Llama 4、DeepSeek 系列在核心基准上逼近同期闭源旗舰，开源阵营首次具备“生产级推理模型”选项；(3)\textbf{算力与生态整合加速}——NVIDIA 的纵向整合（芯片$\to$框架$\to$生态）、云厂商的自研芯片（TPU v6、Trainium 2/3）与数据中心扩张构成基础设施主战场。
+\textbf{本章三条主线}：(1)\textbf{推理与 Agent 成为产品主形态}——o1$\to$o3$\to$GPT-6、R1$\to$V4、Gemini 3.1/3.8 系列把“思考预算”做成产品开关，Operator/Computer Use 把“执行动作”做成标准能力，长时程 Agent 任务成为新的必争基准；(2)\textbf{开源追平并在局部反超闭源}——Qwen3.5、DeepSeek-V4、K2 Horizon 在核心基准上比肩甚至超越同期闭源旗舰，Meta 则于 2026 年 7 月下线 Llama API、转向“开源 + 闭源”双轨；(3)\textbf{算力整合与关键能力治理并进}——NVIDIA 收购 Hugging Face 完成生态纵向整合、头部云厂商年资本开支迈向 5000 亿美元量级；GPT-6 首次触发“Critical”网络安全能力红线、EU AI Act 高风险义务于 2026 年 8 月全面适用，“能力分级 + 部署门槛”成为治理新范式。
 
 \begin{table}[htbp]
 \centering
@@ -1380,16 +1387,17 @@ Agent 协议（MCP） & Agent 连接工具/数据的事实标准（2026）\\
 \toprule
 \textbf{公司/项目} & \textbf{最新进展} & \textbf{亮点}\\
 \midrule
-OpenAI & o3/o4-mini（2025-04）、GPT-5（08）、GPT-5.2（12）、Sora 2、Operator & 推理 + Agent + 多模态统一\\
-Google & Gemini 2.5 $\to$ Gemini 3 Pro（2025-11，LMArena 1501）、Veo 3/3.1、Genie 3 & 原生多模态 + 世界模型\\
-Anthropic & Claude 4（05）$\to$ Opus 4.5（11，SWE-bench 80.9\%）、Computer Use & 编程与 Agent 执行标杆\\
-Meta & Llama 4（2025-04，Scout/Maverick） & 大规模 MoE 开源（评测有争议）\\
-xAI & Grok 3（02）$\to$ Grok 4（07，多智能体） & 10 万卡 Colossus 算力\\
-DeepSeek & R1（01）、V3.1（08） & MLA、纯 RL 推理、RL 成本 29.4 万美元\\
-阿里 & Qwen3（04）、Qwen3-Coder（07） & 36T token 预训练、开源矩阵最全\\
+OpenAI & o3/o4-mini（2025-04）、GPT-5（08）$\to$ 5.2（12）$\to$ 5.6（2026 上半年）$\to$ \textbf{GPT-6 Astra}（2026-09）、Sora 2、Operator & 推理 + Agent + 多模态统一；GPT-6 首触 Critical 网络红线，承诺 \$1B 网络防御\\
+Google & Gemini 3 Pro（2025-11，LMArena 1501）$\to$ 3.1 Pro（2026-02，ARC-AGI-2 77.1\%）$\to$ 3.7（I/O 2026）$\to$ 3.8 Flash Cyber（2026-08）、Veo 3.1、Genie 3 & 原生多模态 + 世界模型 + 主动网络防御\\
+Anthropic & Claude 4（05）$\to$ Opus 4.5（11，SWE-bench 80.9\%）$\to$ Fable 5 / Mythos 5（2026 上半年）$\to$ \textbf{Opus 5}（2026-07） & 编程与 Agent 标杆；Fable 5 第三方评测 SWE-bench 约 95\%，Opus 5 同价升级\\
+Meta & Llama 4（2025-04）$\to$ 下线 Llama API、转“开源+闭源”双轨（2026-07）$\to$ 新旗舰 Muse Spark（2026-09 报道） & Llama 时代收官；报道称 Muse Spark 逼平 Fable 5\\
+xAI & Grok 3（02）$\to$ Grok 4（07，多智能体）$\to$ Grok 4.6（2026-08，长时程 Agent、超低价） & 10 万卡 Colossus；Grok 5 训练中（Colossus 2）\\
+DeepSeek & R1（01）$\to$ V3.2（2025-12，DSA）$\to$ \textbf{V4}（2026-04：Pro 1.6T-A49B / Flash 284B-A13B）$\to$ V4-Pro GA（08-13） & MLA、纯 RL 推理；1M 上下文标配，Agentic 编码开源 SOTA\\
+阿里 & Qwen3（04）$\to$ Qwen3-Coder（07）$\to$ \textbf{Qwen3.5}（2026-02，397B-A17B）$\to$ 3.5-Max 预览（03） & Qwen3-Next 混合架构；201 种语言；吞吐最高 19$\times$；开源矩阵最全\\
 月之暗面 & Kimi K2（07） & 1T 级 MoE 全量开源，开源榜第一\\
 智谱 & GLM-4.5（07）、2026-01 港股上市 & 大模型第一股\\
-NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（2026-08） & 算力 + 生态纵向整合\\
+NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（\textbf{2026-09-03} 官宣） & 算力 + 生态纵向整合（HSR 审查中）\\
+IFM（MBZUAI） & \textbf{K2 Horizon}（2026-09）：0.9B--375B 六模型 & 全流程开源（数据/检查点/日志），小尺寸三档 SOTA；首创 MoVA\\
 \bottomrule
 \end{tabular}
 \caption{2025--2026 主要玩家动态}
@@ -1417,16 +1425,22 @@ NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（2026-08） & 算力 + �
   \item \textbf{6--7 月}：o3-pro；\textbf{Kimi K2} 万亿参数全量开源（LMArena 开源第一）；Qwen3-Coder（Agentic Coding 开源 SOTA）；GLM-4.5（355B MoE）开源；Grok 4（多智能体 Heavy）；
   \item \textbf{8 月}：\textbf{GPT-5} 发布（快慢思考统一路由，幻觉率较 o3 大幅下降）；OpenAI 时隔多年重回开源（GPT-oss-120B/20B）；DeepSeek-V3.1（混合思考 + 强代码）；Google Genie 3 世界模型；
   \item \textbf{9 月}：Sora 2 + 独立 App（被称作视频界的 GPT-3.5 时刻）；中国《人工智能生成合成内容标识办法》施行；DeepSeek 经 Nature 封面论文披露 R1 训练成本仅 29.4 万美元；
-  \item \textbf{10--12 月}：Claude Opus 4.5（SWE-bench 80.9\%，首个破 80）；\textbf{Gemini 3 Pro}（LMArena 首破 1500 Elo，GPQA 91.9\%）；Veo 3.1；GPT-5.1 / 5.2；据报道 Manus 被 Meta 收购；
+  \item \textbf{10--12 月}：Claude Opus 4.5（SWE-bench 80.9\%，首个破 80）；\textbf{Gemini 3 Pro}（LMArena 首破 1500 Elo，GPQA 91.9\%）；Veo 3.1；GPT-5.1 / 5.2；DeepSeek-V3.2（DSA 稀疏注意力生产化）；据报道 Manus 被 Meta 收购；据 Wired 报道，Gemini 3 的发布一度触发 OpenAI 内部 Code Red；
   \item \textbf{2026 年 1 月}：智谱 AI 港股上市（全球大模型第一股）、MiniMax 上市首日涨 109\%；LeCun 离开 Meta 创立 AMI Labs 押注世界模型；三大实验室同步进军医疗 AI。
+  \item \textbf{2026 年 2 月}：Google 发布 Gemini 3.1 Pro（ARC-AGI-2 77.1\%，约为 3 Pro 两倍）；阿里除夕夜开源 \textbf{Qwen3.5}（397B-A17B，Qwen3-Next 混合架构，201 种语言），3 月再推 Qwen3.5-Max 预览版；
+  \item \textbf{2026 年 4 月}：DeepSeek-\textbf{V4} 开源预览（Pro 1.6T/激活 49B、Flash 284B/激活 13B，1M 上下文成为全线标配）；
+  \item \textbf{2026 年 5 月}：Google I/O 宣布“Agentic Gemini 时代”（Gemini 3.7）；Anthropic 于上半年推出新一代前沿系列 Fable 5 与 Mythos 5；
+  \item \textbf{2026 年 7 月}：\textbf{Claude Opus 5} 发布（每百万 token \$5/\$25 同价大升级，effort 档位可调）；Meta 宣布下线 Llama API、转向双轨；Anthropic 披露三起 Claude 未授权访问系统事件并邀 METR 独立审查；
+  \item \textbf{2026 年 8 月}：DeepSeek-V4-Pro 正式版 GA（合并推理/对话双模）；xAI Grok 4.6（长时程 Agent、价格下探）；Gemini 3.8 Flash Cyber 把“主动网络防御”做成产品；EU AI Act 高风险义务 8 月 2 日全面适用；
+  \item \textbf{2026 年 9 月初}：NVIDIA 官宣约 129 亿美元收购 Hugging Face（9 月 3 日）；IFM（MBZUAI）发布 K2 Horizon 六模型全流程开源全家桶；OpenAI 发布 \textbf{GPT-6 Astra}（ARC-AGI 约 99\%，称“AGI 时代开端”，同时首次触发 Critical 网络安全红线、承诺 10 亿美元网络防御）；Meta 新旗舰 Muse Spark 曝出逼平 Fable 5。
 \end{itemize}
 
 \subsection{中国力量：从追赶到并跑}
 
 \textbf{开源阵营的主导权已明显东移}：2025 年全球开源模型的下载量与衍生生态中，中国模型占据多数份额；在生产级推理与 Agent 能力上，开源首次与闭源并肩。代表阵营：
 \begin{itemize}
-  \item \textbf{DeepSeek}：R1（RL 成本 29.4 万美元）$\to$ V3.1（混合思考、强代码）；以 MLA / MTP / FP8 / 无辅助损失 MoE 的架构-系统协同路线持续压低训练与推理成本，是全年行业成本曲线的锚点；
-  \item \textbf{阿里 Qwen}：Qwen3 全系开源（0.6B--235B，Apache 2.0），36T token 预训练、119 种语言，衍生模型生态为全球最大；Qwen3-Coder 补齐 Agent 编程短板；
+  \item \textbf{DeepSeek}：R1（RL 成本 29.4 万美元）$\to$ V3.1 / V3.2（混合思考、强代码、DSA 稀疏注意力）$\to$ \textbf{V4}（2026-04：Pro 1.6T/激活 49B、1M 上下文标配；8 月 V4-Pro 正式版）；以 MLA / MTP / FP8 / 无辅助损失 MoE / 稀疏注意力的架构-系统协同路线持续压低训练与推理成本，是两年间行业成本曲线的锚点；
+  \item \textbf{阿里 Qwen}：Qwen3 全系开源（0.6B--235B，Apache 2.0，36T token、119 种语言）$\to$ \textbf{Qwen3.5}（2026-02：Gated DeltaNet 线性注意力 + 稀疏 MoE 的 Qwen3-Next 架构，397B-A17B、201 种语言、吞吐最高 19$\times$）与 Qwen3.5-Max 预览版；衍生模型生态为全球最大；
   \item \textbf{月之暗面 Kimi}：K2 以 1T 级 MoE 全量开源并登顶开源榜，验证 Agentic 数据工程 + 大 MoE 路线；
   \item \textbf{智谱 GLM}：GLM-4.5（355B MoE）开源，2026 年 1 月率先登陆港交所成为全球大模型第一股；
   \item \textbf{字节跳动}：豆包系产品用户量居国内首位，Seedream 4.0（图像生成/编辑一体化）与 Seedance 1.0（视频生成）在多模态侧形成竞争力；
@@ -1436,7 +1450,7 @@ NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（2026-08） & 算力 + �
 
 \subsection{算力、资本与开源生态}
 
-\textbf{算力}：NVIDIA Blackwell（B200/GB200）进入规模部署，2026 年 8 月官宣以约 \textbf{129 亿美元}收购 Hugging Face（含约 119 亿美元现金，进入 HSR 反垄断审查）——芯片 + 框架 + 模型生态的纵向整合引发开源社区对中立性的担忧；云厂商自研芯片（TPU、Trainium、MTIA）继续分流；吉瓦级数据中心的能源与环评（燃气发电、核电 PPA）成为新的瓶颈议题。\textbf{资本}：OpenAI 完成 400 亿美元融资（估值 3000 亿美元）、2026 年营收目标 300 亿美元；Anthropic F 轮 130 亿美元（估值 1830 亿美元）；行业在 AI 泡沫争议中进入以真实 ROI 论成败的价值证明之年。\textbf{开源生态}：MCP 协议捐赠开源基金会、成为 Agent 连接工具的事实标准；OpenAI 重回开源（GPT-oss）、Llama 4 争议动摇 Meta 的开源信誉、Qwen/Kimi/GLM 补位——开源重心从单点旗舰转向\emph{全栈生态}（权重 + 推理引擎 + Agent 框架 + 协议）。
+\textbf{算力}：NVIDIA Blackwell（B200/GB200）进入规模部署，\textbf{2026 年 9 月 3 日}官宣以约 \textbf{129 亿美元}收购 Hugging Face（含约 119 亿美元现金，进入 HSR 反垄断审查）——芯片 + 框架 + 模型生态的纵向整合引发开源社区对中立性的担忧；云厂商自研芯片（TPU、Trainium、MTIA）继续分流，2026 年头部云厂商 AI 资本开支预计合计突破 5000 亿美元，吉瓦级数据中心的能源与环评（燃气发电、核电 PPA）成为新的瓶颈议题。\textbf{资本}：OpenAI 完成 400 亿美元融资（估值 3000 亿美元）并于 2025 年 10 月完成公益公司（PBC）重组，公开报道口径的累计算力合同承诺已超万亿美元、2026 年营收目标 300 亿美元；Anthropic F 轮 130 亿美元（估值 1830 亿美元）；行业在 AI 泡沫争议中进入以真实 ROI 论成败的价值证明之年。\textbf{开源生态}：MCP 协议捐赠开源基金会、成为 Agent 连接工具的事实标准；OpenAI 重回开源（GPT-oss）、Llama 4 争议与 Llama API 下线动摇 Meta 的开源旗手地位、Qwen/Kimi/GLM 补位，IFM（MBZUAI）以“全流程开源”的 K2 Horizon 加码——开源重心从单点旗舰转向\emph{全栈生态}（权重 + 数据配方 + 推理引擎 + Agent 框架 + 协议）。
 
 
 % ===================== 第十二章 =====================
@@ -1478,12 +1492,12 @@ NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（2026-08） & 算力 + �
   \item \textbf{访问结构经济学}：能力由“压缩态 + 逐字索引”双通道的完备性定价，混合架构与外置记忆成为能力竞争的新前线（见 10.3 节）
   \item \textbf{AI for Science}：从工具到发现者（蛋白质、材料、数学）
   \item \textbf{安全内生}：从“事后过滤”到“训练时对齐 + 运营时审计”
-  \item \textbf{开源东移}：Qwen、DeepSeek、Kimi、GLM 与 Llama 并立，开源首次覆盖生产级推理与 Agent 能力
+  \item \textbf{开源东移与路线分化}：Qwen、DeepSeek、Kimi、GLM 领跑并覆盖生产级推理与 Agent 能力；Meta 2026-07 下线 Llama API 转向双轨，IFM 等新玩家以“全流程开源”（数据配方 + 检查点 + 日志）加码
   \item \textbf{端侧 AI}：隐私优先的本地推理（1B--10B 模型进手机/PC）
   \item \textbf{世界模型}：从语言走向物理（Genie 3、AMI Labs），为具身智能铺路
 \end{enumerate}
 
-2026 年值得盯住的三个变量：一是\emph{世界模型}能否从演示走向可用（Genie 3 类可交互世界、AMI Labs 路线）；二是\emph{上市潮}能否经受盈利检验（头部的 IPO 预期与港交所已上市公司的商业化数据）；三是\emph{监管全面生效}（EU AI Act 2026 年 8 月全面适用、中国标识义务常态化）对产品形态的实际约束。
+2026 年值得盯住的四个变量：一是\emph{世界模型}能否从演示走向可用（Genie 3 类可交互世界、AMI Labs 路线）；二是\emph{上市潮}能否经受盈利检验（头部的 IPO 预期与港交所已上市公司的商业化数据）；三是\emph{监管全面生效}（EU AI Act 2026 年 8 月高风险义务全面适用、中国标识义务常态化）对产品形态的实际约束；四是\emph{关键能力治理}的走向——GPT-6 Astra 被称为“AGI 时代开端”的同时首次触发 Critical 网络安全红线，前沿模型的部署门槛正从“基准分数”转向“能力分级 + 红线管理”。
 
 \subsection{给学习者的建议}
 
@@ -1564,6 +1578,8 @@ PagedAttention & Paged KV Cache & KV 分页管理，消碎片\\
 MCP & Model Context Protocol & Agent 连接工具/数据的标准协议（2026 事实标准）\\
 推测解码变体 & EAGLE / Medusa & 特征级 / 多头自草拟\\
 MTP & Multi-Token Prediction & 多 token 预测，兼作草拟器\\
+DSA & DeepSeek Sparse Attention & 稀疏注意力：token 压缩 + 按需查账（V3.2 起生产化）\\
+Gated DeltaNet & --- & 门控增量线性注意力（Qwen3-Next 的压缩态通道）\\
 YaRN & Yet another RoPE extensioN & RoPE 长上下文分段外推\\
 QLoRA & Quantized LoRA & 4-bit 基座 + LoRA 微调\\
 NF4 & NormalFloat 4-bit & 正态感知 4-bit 量化格式\\
@@ -1650,6 +1666,16 @@ HumanEval/MBPP & — & 代码能力基准\\
   \item Radford et al., 2021. \emph{CLIP}（arXiv:2103.00020）；Radford et al., 2022. \emph{Whisper}（arXiv:2212.04356）；
   \item Liu et al., 2023. \emph{LLaVA}（arXiv:2304.08485）；
   \item Peebles and Xie, 2023. \emph{Scalable Diffusion Models with Transformers (DiT)}（arXiv:2212.09748）。
+\end{itemize}
+
+\textbf{2026 年前沿动态溯源}（官方公告为主）
+\begin{itemize}
+  \item OpenAI, 2026. \emph{GPT-6 Astra}（系统卡与 frontier safeguards 公告，2026-09）；
+  \item Anthropic, 2026. \emph{Claude Opus 5 / Fable 5 / Mythos 5} 模型公告（2026-07）；2026-07-30 未授权访问事件的披露与 METR 独立审查说明；
+  \item Google, 2026. \emph{Gemini 3.1 Pro}（2026-02）与 \emph{Gemini 3.8 Flash Cyber}（2026-08）官方博客；
+  \item DeepSeek-AI, 2026. \emph{DeepSeek-V4 技术报告}（Hugging Face：deepseek-ai/DeepSeek-V4，DSA 与 1M 上下文；V4-Pro GA 2026-08-13）；
+  \item Qwen Team, 2026. \emph{Qwen3.5} 技术博客（Qwen3-Next 混合架构，2026-02）；
+  \item IFM / MBZUAI, 2026. \emph{K2 Horizon} 全流程开源发布公告（Apache 2.0，2026-09）。
 \end{itemize}
 
 \textbf{行业动态溯源}：各模型官方技术报告/系统卡（OpenAI、Anthropic、Google、Meta、DeepSeek、Qwen、Moonshot、智谱）；中文行业报道推荐机器之心、量子位与 36 氪 AI 频道；监管文本以网信办、欧盟委员会官网为准。
