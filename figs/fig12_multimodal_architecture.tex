@@ -3,29 +3,30 @@
 % 由 dl_llm_report.tex 抽取，经 \input{figs/fig12_multimodal_architecture} 引用（caption/label 在主文件）
 % 注意：本文件为片段，依赖主文件导言区的 tikz/pgfplots 宏包、颜色定义与 tikzset 样式，不可单独编译。
 
-\begin{tikzpicture}
-  % ---- 输入模态（左） ----
-  \node[gry, minimum width=22mm] (img) at (0,1.7) {图像 / 文档};
-  \node[gry, minimum width=22mm] (vid) at (0,0) {视频（帧序列）};
-  \node[gry, minimum width=22mm] (aud) at (0,-1.7) {音频};
-  % ---- 专用编码器 ----
-  \node[blk, minimum width=26mm] (venc) at (3.5,1.1) {视觉编码器\\ ViT / ConvNeXt};
-  \node[blk, minimum width=26mm] (aenc) at (3.5,-1.1) {音频编码器};
-  % ---- 投影层 / LLM / 输出：阶段间隙 ≥0.7cm，避免贴挤 ----
-  \node[orn, minimum width=26mm] (proj) at (6.9,0) {投影层\\ 对齐到词表空间};
-  \node[grn, minimum width=28mm, minimum height=13mm] (llm) at (10.3,0) {LLM Backbone\\（文本 token 直连）};
-  \node[orn, minimum width=28mm] (out) at (13.9,0) {输出\\ 文本 · 动作 · 工具调用};
-  \node[gry, minimum width=22mm] (txt) at (6.9,2.9) {文本 token};
-  % ---- 连线：编码器入口/投影层入口均分散锚点，箭头不再汇聚打结 ----
-  \draw[arr] (img.east) -- ([yshift=2mm]venc.west);
-  \draw[arr] (vid.east) -- ([yshift=-2mm]venc.west);
-  \draw[arr] (aud.east) -- (aenc.west);
-  \draw[arr] (venc.east) -- ([yshift=2mm]proj.west);
-  \draw[arr] (aenc.east) -- ([yshift=-2mm]proj.west);
-  \draw[arr] (txt) -- (proj);
-  \draw[arr] (txt.east) to[bend left=22] (llm.70);
-  \draw[arr] (proj)--(llm); \draw[arr] (llm)--(out);
-  \node[lab, anchor=east] at (5.0,2.9) {拼接式（LLaVA 系）};
-  \node[lab, anchor=west] at (10.3,2.1) {原生式（Gemini 系）};
-  \node[lab] at (7.1,-3.1) {视觉 token 成本：一张 1024$^2$ 图 $\approx$ 数百至上千 token，是多模态请求成本的大头};
+\begin{tikzpicture}[x=1cm, y=1cm]
+  % ---- 输入模态（左）：三框等宽对齐，图像/音频与各自编码器同高，仅“视频”一条斜线 ----
+  \node[gry, minimum width=24mm] (img) at (0,1.85) {图像 / 文档};
+  \node[gry, minimum width=24mm, align=center] (vid) at (0,0) {视频\\（帧序列）};
+  \node[gry, minimum width=24mm] (aud) at (0,-1.85) {音频};
+  % ---- 专用编码器（副标题 \scriptsize 控制自然宽度，避免与相邻框重叠） ----
+  \node[blk, minimum width=26mm] (venc) at (3.9,1.85) {视觉编码器\\ {\scriptsize ViT / ConvNeXt}};
+  \node[blk, minimum width=24mm] (aenc) at (3.9,-1.85) {音频编码器};
+  % ---- 投影层 / LLM / 输出：阶段间隙 ≥0.8cm，保证箭头方向明确不反转 ----
+  \node[orn, minimum width=24mm] (proj) at (7.5,0) {投影层\\ {\scriptsize 对齐到词表空间}};
+  \node[grn, minimum width=28mm, minimum height=12mm] (llm) at (11.2,0) {LLM Backbone\\ {\scriptsize （文本 token 直连）}};
+  \node[orn, minimum width=28mm] (out) at (15.0,0) {输出\\ {\scriptsize 文本 · 动作 · 工具调用}};
+  \node[gry, minimum width=22mm] (txt) at (7.5,3.3) {文本 token};
+  % ---- 连线：入口分散锚点，主干箭头全部水平 ----
+  \draw[brr] (img.east) -- (venc.west);
+  \draw[brr] (vid.east) -- ([yshift=-2.5mm]venc.west);
+  \draw[brr] (aud.east) -- (aenc.west);
+  \draw[brr] (venc.east) -- ([yshift=2.5mm]proj.west);
+  \draw[brr] (aenc.east) -- ([yshift=-2.5mm]proj.west);
+  \draw[brr] (txt) -- (proj);
+  \draw[brr] (txt.east) to[bend left=22] (llm.70);
+  \draw[brr] (proj) -- (llm);
+  \draw[brr] (llm) -- (out);
+  \node[lab, anchor=east] at (5.9,3.3) {拼接式（LLaVA 系）};
+  \node[lab, anchor=west] at (11.2,2.4) {原生式（Gemini 系）};
+  \node[font=\scriptsize\itshape, text=cgray] at (6.5,-3.2) {视觉 token 成本：一张 1024$^2$ 图 $\approx$ 数百至上千 token，是多模态请求成本的大头};
 \end{tikzpicture}
