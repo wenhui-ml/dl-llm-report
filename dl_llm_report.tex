@@ -944,7 +944,7 @@ MLX & Apple Silicon 优化\\
 \[
 \text{准确率} \;\propto\; f(\text{训练算力}) \cdot g(\text{推理算力}), \qquad g \text{ 同样近似幂律}
 \]
-这一“第三扩展轴”（参数 $N$、数据 $D$、推理算力 $R$）是 2025--2026 年大模型竞争的主战场（详见第 10 章）。
+这一“第三扩展轴”（参数 $N$、数据 $D$、推理算力 $R$）是 2025--2026 年大模型竞争的主战场（详见第 10 章）。值得注意：测试时计算并非只有“生成更多 token”一种形态——让计算在潜空间循环、把深度本身变成测试时资源的“不出声思考”，是另一条平行路线（见下文循环深度一节）。
 
 \begin{figure}[htbp]
 \centering
@@ -1005,6 +1005,29 @@ R1-Zero（跳过冷启动、直接 RL）实验证明推理能力可从基座“�
 \textbf{成本}：官方 2025 年 9 月披露，R1 的 RL 增量训练成本仅约 \textbf{29.4 万美元}（V3 基座预训练约 \$5.6M）；作为对照，o1 的训练成本从未公开，外界普遍估计在数千万美元量级。R1 以开源权重 + 极低训练成本证明：\emph{推理能力不再是大算力公司的专属品}——这直接触发了 2025 年初的“DeepSeek 冲击波”（见第 11 章）。
 
 \textbf{蒸馏与 RL 的边界}是 R1 论文留下的重要工程结论：把 R1 的推理样本蒸馏给 1.5B--7B 小模型，效果\emph{优于}小模型自己跑 RL——说明推理“模式”可以低成本迁移；但小模型蒸馏版的天花板被老师锁死，要想“超越老师”，仍然需要更大的基座 + 完整的 RL 过程。这为业界画了一张实用路线图：\emph{应用型小模型走蒸馏（便宜、快），前沿能力探索走 RL（昂贵、但能产生新知识）}。此外，思维链的\emph{可见性}也成了产品决策：DeepSeek 公开完整思考链（利于研究、审计与信任），OpenAI 只展示摘要（防蒸馏、降低安全暴露面），Qwen3 干脆把“是否思考”做成用户可切的开关——同一技术，三种产品哲学。
+
+\subsection{循环深度与潜空间推理：不出声的思考}
+
+此前讨论的测试时计算都发生在\textbf{token 空间}：模型把思考“写出来”（长 CoT、思考预算）。存在一条平行路线——让计算在\textbf{潜空间}里循环，把“网络深度”本身变成测试时资源。
+
+\textbf{谱系与转折}：Universal Transformer（2018，层间共享权重循环展开）与 ACT/PonderNet 一系自适应计算是先驱，但长期停留在“性能不及固定深度同算力模型”的尴尬境地；转折点是 2025 年的两项工作：
+\begin{itemize}
+  \item \textbf{循环深度潜空间推理}（Geiping et al., 2025，arXiv:2502.05171）：架构为 \emph{Prelude--Core--Coda} 三段（图~\ref{fig:recdepth}）——Prelude 编码输入，中段循环核心按 $s_{i+1}=\mathrm{Core}(s_i, e)$ 在潜空间迭代（每步重新注入输入 $e$ 以稳定训练），Coda 读出分布。3.5B 参数、800B token 的概念验证显示：随迭代步数增加，推理基准持续提升，最高表现出约 50B 参数模型的计算负载；相邻两步输出分布的 KL 收敛可作\emph{零样本提前退出}判据——不同 token 自然分配到不同深度。与深度均衡模型（DEQ）的区别在训练目标：用截断 BPTT 展开循环，而非对不动点求导，因此不要求算子收敛（实践中多数 token 平滑收敛，少数走“轨道”式迭代同样有用）。
+  \item \textbf{Mixture-of-Recursions}（Google DeepMind, 2025）：把“每个 token 递归几步”交给路由器学习（expert-choice / token-choice 两种分配粒度），配合跨递归步的 KV 共享策略，在同等训练算力下取得优于参数量匹配基线的每 FLOP 性能——递归深度第一次在旗舰级工程里“回本”。
+\end{itemize}
+
+\textbf{为什么这条路线突然重要}——用 10.3 节的语言说：固定深度的 log-精度 Transformer 被约束在 $\mathrm{TC}^0$ 类内（“电路墙”），串行组合深度买不来。CoT 是\emph{用 token 长度购买深度}，循环深度是\emph{用参数复用购买深度}——两者都把“平面计算图”改造成“任意深度计算图”，只是付费货币不同。循环深度的独特优势：思考不占用上下文窗口、不留可被蒸馏的可见思维链（直接消除“只给思考摘要”式的安全暴露面）、对难以言表的推理（空间/符号操作）更友好；代价是可解释性更差、跨步 KV 管理（共享 vs 独立）与延迟调度更复杂，且迄今公开验证的规模（10B 级）仍落后主流推理模型。
+
+\begin{figure}[htbp]
+\centering
+\resizebox{0.97\textwidth}{!}{%
+\input{figs/fig11_recurrent_depth}
+}%
+\caption{循环深度 Transformer（潜空间推理）示意：Prelude 编码后，循环核心按需迭代 $r$ 步（测试时可调），Coda 读出分布；KL 收敛判据允许逐 token 提前退出。与 CoT“用 token 长度买深度”不同，循环深度“用参数复用买深度”，思考不占用上下文窗口（Geiping et al., 2025；DeepMind MoR, 2025）。}
+\label{fig:recdepth}
+\end{figure}
+
+2026 年，该方向已从单点论文扩展为一个小型生态：Looped Language Model 的规模化训练、连续潜空间推理训练、Recursive Language Models、Inner Thinking Transformer 等变体相继出现。它是否已进入 GPT-6 / o 系旗舰的生产实现，各实验室均未披露——业界共识是“快慢路由 + 潜空间计算”的某种混合是下一步，但公开证据仍属间接。
 
 \subsection{过程奖励模型（PRM）}
 
@@ -1067,7 +1090,7 @@ ORM（结果奖励） & 只看最终答案对不对\\
 \begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{%
-\input{figs/fig11_multimodal_architecture}
+\input{figs/fig12_multimodal_architecture}
 }%
 \caption{多模态大模型的标准架构：各模态先经专用编码器压缩为 token 序列，由投影层对齐进 LLM 词表空间后与文本统一处理——融合发生的位置（投影层 vs 第一层）区分了拼接式与原生式两大路线。}
 \label{fig:mm}
@@ -1165,7 +1188,7 @@ Gemini 3/3.1 & 原生多模态 + Deep Think & 文本+图+音+视频统一\\
 \begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{%
-\input{figs/fig12_defense_in_depth}
+\input{figs/fig13_defense_in_depth}
 }%
 \caption{多层防御纵深（defense in depth）：训练时对齐是根基，输入/输出防御是护栏，红队是持续校准机制——任何单层都可被绕过，安全水位取决于整条链与回流的闭环。}
 \label{fig:defense}
@@ -1248,7 +1271,7 @@ DeepMind 用更严格的控制变量（固定算力预算，扫描不同 $N/D$ �
 
 \begin{figure}[htbp]
 \centering
-\input{figs/fig13_scaling_laws}
+\input{figs/fig14_scaling_laws}
 \caption{Scaling Law 的示意曲线（对数-对数坐标下近似直线）：在同等算力预算下，“数据等比”路线（Chinchilla）优于“参数优先”路线；数据质量与合成数据可将整条曲线进一步下压。}
 \label{fig:scaling}
 \end{figure}
@@ -1316,7 +1339,7 @@ CCH 把上述论断锚定在一个\textbf{见证任务}上：\textbf{无限流�
 \begin{figure}[htbp]
 \centering
 \resizebox{0.97\textwidth}{!}{%
-\input{figs/fig14_cch_access_structure}
+\input{figs/fig15_cch_access_structure}
 }%
 \caption{CCH 的双通道访问结构与三堵墙（示意）：单一通道必被至少一堵墙挡住；同时持有压缩态与逐字索引双通道的混合体按每堵墙的价格（状态容量、窗口覆盖、组合深度）逐一穿越，能力在复合下严格超可加（Chen et al., 2026, arXiv:2607.14144）。}
 \label{fig:cch}
@@ -1414,6 +1437,8 @@ IFM（MBZUAI） & \textbf{K2 Horizon}（2026-09）：0.9B--375B 六模型 & 全�
   \item ChatGPT 推出临时聊天、个性化、插件等持续迭代
 \end{itemize}
 
+\textbf{GPT-6 Astra 为什么值得单独一记}：它把本章三条主线同时推到了新位置。\emph{能力上}，公开报道口径的 ARC-AGI 接近满分（约 99\%）、数学与攻防类测试近乎满分——距 GPT-5.2 / 5.6 仅约 9 个月的代际跨越。\emph{治理上}，它是首个触发 OpenAI 准备度框架“Critical”级（网络安全域）的模型，配套发布《Path to Astra：关键能力与前沿保障》，同步给出能力分级、部署门槛、红队强度与 10 亿美元网络防御承诺——第 9 章的“能力--风险非对称”与 10.3 节的“电路墙”在产品层面首次正面相遇。\emph{市场上}，“AGI 时代开端”的宣称并未推高算力叙事，官宣次日 NVIDIA 股价不涨反跌（约 $-2\%$）——市场开始按“效率曲线”而非“堆卡曲线”给基础设施定价，与下文算力一节的成本锚点判断一致。技术实现层面 OpenAI 披露有限：业界普遍推断其延续“统一路由快慢思考 + agentic RL + 大规模 MoE”路线，是否引入潜空间/循环计算（见第 7 章末节）尚无公开证据——把“基准分数的代际跳变”直接归因于“架构革命”，目前仍缺乏支撑。
+
 \subsection{2025 年时间线：从 DeepSeek 冲击波到多极格局}
 
 \begin{itemize}
@@ -1473,7 +1498,7 @@ IFM（MBZUAI） & \textbf{K2 Horizon}（2026-09）：0.9B--375B 六模型 & 全�
 
 \begin{figure}[htbp]
 \centering
-\input{figs/fig15_data_flywheel}
+\input{figs/fig16_data_flywheel}
 \caption{大模型技术栈的运行闭环：每一轮迭代都在为下一轮积累数据与评估资产。飞轮各环节分别对应第 4 章（训练）、第 5--6 章（模型与部署）、第 8 章（应用形态）与第 9 章（评测与安全）。}
 \label{fig:flywheel}
 \end{figure}
@@ -1590,6 +1615,8 @@ RLAIF & RL from AI Feedback & AI 反馈替代人类反馈\\
 提示注入 & Prompt Injection & 经外部内容注入恶意指令\\
 Test-time Compute & 测试时计算 & 用推理时长换准确率\\
 MCTS & Monte Carlo Tree Search & 蒙特卡洛树搜索（推理路径）\\
+循环深度 & Recurrent Depth & 测试时迭代中段块，深度成为推理资源\\
+潜空间推理 & Latent Reasoning & 在连续隐状态中思考，不生成思考 token\\
 CoT 忠实度 & CoT Faithfulness & 思考链是否反映真实决策依据\\
 VAD & Voice Activity Detection & 语音端点检测\\
 EnCodec & — & 神经声码编解码器（语音 token 化）\\
@@ -1654,6 +1681,8 @@ HumanEval/MBPP & — & 代码能力基准\\
   \item Kwon et al., 2023. \emph{vLLM: PagedAttention}（arXiv:2309.06180）；
   \item Leviathan et al., 2023. \emph{Speculative Decoding}（arXiv:2211.17192）；Li et al., 2024. \emph{EAGLE}（arXiv:2401.15077）；
   \item Wei et al., 2022. \emph{Chain-of-Thought}（arXiv:2201.11903）；Wang et al., 2022. \emph{Self-Consistency}（arXiv:2203.11171）；
+  \item Geiping et al., 2025. \emph{Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach}（arXiv:2502.05171）——循环深度潜空间推理（Prelude--Core--Coda）；Google DeepMind, 2025. \emph{Mixture-of-Recursions}（技术报告）——动态递归深度与 KV 共享；
+  \item Dehghani et al., 2018. \emph{Universal Transformers}（arXiv:1807.03819）；Graves, 2016. \emph{Adaptive Computation Time}（arXiv:1603.08983）——循环深度/自适应计算的思想源头；
   \item Lightman et al., 2023. \emph{Let's Verify Step by Step}（PRM，arXiv:2305.20050）；
   \item DeepSeek-AI, 2025. \emph{DeepSeek-R1}（arXiv:2501.12948，Nature 封面论文）；
   \item Qwen Team, 2025. \emph{Qwen3 Technical Report}（arXiv:2505.09388）。

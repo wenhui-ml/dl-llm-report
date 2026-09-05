@@ -1,0 +1,29 @@
+% fig11_recurrent_depth.tex — 图11 循环深度 Transformer：潜空间推理
+% 《深度学习与大语言模型：前沿技术全景报告》图示库
+% 由 dl_llm_report.tex 经 \input{figs/fig11_recurrent_depth} 引用（caption/label 在主文件）
+% 注意：本文件为片段，依赖主文件导言区的 tikz 宏包、颜色定义与 tikzset 样式，不可单独编译。
+
+\begin{tikzpicture}[x=1cm, y=1cm]
+  \node[gry, minimum width=25mm] (inp) at (0,0) {输入 token 序列};
+  \node[blk, minimum width=27mm] (pre) at (3.5,0) {Prelude $P$\\ 嵌入与编码};
+  \node[grn, minimum width=31mm, minimum height=14mm] (core) at (7.7,0) {\textbf{循环核心 Core $R$}\\（Transformer 块）};
+  \node[orn, minimum width=25mm] (coda) at (11.7,0) {Coda $C$\\ 读出分布};
+  \node[gry, minimum width=23mm] (out) at (14.8,0) {输出 token};
+  % 循环自环
+  \draw[brr] (core.50) to[out=85,in=95,looseness=2.6]
+    node[font=\scriptsize\bfseries, text=cgreen!60!black, above, midway, align=center]
+    {$s_{i+1}=\mathrm{Core}(s_i,\,e)$\quad 重复 $r$ 步（$r$ 在测试时可调）} (core.130);
+  % 主干箭头
+  \draw[brr] (inp) -- (pre);
+  \draw[brr] (pre) -- node[lab, below]{$e$：每步重新注入} (core);
+  \draw[brr] (core) -- node[lab, below]{$s_r$} (coda);
+  \draw[brr] (coda) -- (out);
+  % 提前退出注释
+  \node[font=\scriptsize, text=cgray, align=center] at (7.7,-1.55)
+    {提前退出判据：相邻两步输出分布的 KL 距离收敛\\（不同 token 自然分配不同深度）};
+  % 两条路线对比
+  \node[font=\scriptsize, text=cgray, align=center] at (6.8,-3.0)
+    {主流 TTC（长思考 / 思考预算）：深度以 \textbf{token 长度}购买\\ 上下文、延迟与蒸馏暴露面随思考线性增长};
+  \node[font=\scriptsize, text=cgreen!60!black, align=center] at (6.8,-4.3)
+    {循环深度：深度以 \textbf{步数}购买\\ 上下文占用恒定，思考不留可见“痕迹”，是 CoT 之外的测试时计算形态};
+\end{tikzpicture}
