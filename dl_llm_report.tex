@@ -51,6 +51,14 @@
 \newtcolorbox{warnbox}[1]{breakable,colback=orange!8,colframe=orange!70!black,fonttitle=\bfseries,title={#1},boxrule=0.8pt,left=8pt,right=8pt,top=6pt,bottom=6pt}
 \lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{codebg},frame=single,numbers=left,numberstyle=\tiny\color{gray},breaklines=true,tabsize=2}
 \setlist{topsep=4pt,itemsep=2pt}
+% ---- 浮动体自适应参数：图表可漂浮补页，消除 [H] 造成的页尾大片留白 ----
+\renewcommand{\topfraction}{0.9}       % 页顶浮动体最多占版心比例
+\renewcommand{\bottomfraction}{0.6}    % 页底浮动体最多占版心比例
+\renewcommand{\textfraction}{0.07}     % 每页至少保留的正文比例
+\renewcommand{\floatpagefraction}{0.8} % 浮动页至少需填满的比例
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
 \begin{document}
 % ===================== 封面 =====================
 \begin{titlepage}
@@ -84,7 +92,7 @@
 本报告以公开论文、技术报告与官方文档为主要信息源。关键定量结论（如 DeepSeek-V3 的 671B 总参数 / 37B 激活参数 / 2.79M H800 GPU$\cdot$hours 训练成本、Qwen3-235B-A22B 的 128 专家 / 激活 8、LLaMA-2 70B 的 GQA 实验等）均引用自原始技术报告或论文。行业动态截至 2026 年 9 月：2025 年的主要事件（GPT-5、Gemini 3、Claude Opus 4.5、Qwen3、Kimi K2、Sora 2 等）与 NVIDIA 收购 Hugging Face（约 129 亿美元，2026 年 8 月官宣）均经多个公开报道交叉核实；2026 年上半年个别事件（如 Gemini 3.7 等）的量化细节以最终官方披露为准，读者引用时建议回溯原始来源核实。
 \end{infobox}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig01_macro_architecture}
 \caption{报告宏观架构：五个层次自底向上堆叠，每层依赖下一层；括号内为对应章节。}
@@ -117,7 +125,7 @@ $\text{一个 LLM Block：} \mathbf{h} = \mathbf{x} + \text{Attn}(\text{RMSNorm}
 
 把视角再抬高一层的直观理解是：\textbf{学习就是在一个巨大的计算图上搜索“最优的旋钮组合”}。以 7B 模型为例，约 70 亿个参数就是 70 亿个旋钮；训练的过程，是让数万亿 token 依次流过计算图，用每次预测的误差（梯度）反向微调所有旋钮，直到整个网络对“下一个 token”的猜测足够准。这句话里藏着深度学习的三个支点：\emph{可微}（损失对参数处处可导，梯度存在）、\emph{可反向传播}（链式法则把误差按贡献归因到每个参数）、\emph{可并行}（大矩阵乘法主导，天然适配 GPU）。第 4--6 章的所有工程奇迹，本质上都是在放大这三个支点。图~\ref{fig:neuron} 给出了这一全景。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig02_neuron_views}
 \caption{深度学习的三个基本视图：(a) 人工神经元；(b) 计算图上的前向传播与反向传播；(c) 多层感知机——现代 LLM 就是把 (c) 的宽度与深度放大七个数量级、再把隐藏层换成注意力与 SwiGLU 的产物。}
@@ -133,7 +141,7 @@ $\text{一个 LLM Block：} \mathbf{h} = \mathbf{x} + \text{Attn}(\text{RMSNorm}
 
 工程上，激活函数的选择需权衡三点：\textbf{计算代价}（$\tanh$ 类需要指数运算，ReLU/GELU 近似更廉价）、\textbf{梯度特性}（负区间梯度是否消失）、\textbf{平滑性}（ReLU 在 0 点不可导，训练大模型时 GELU/SiLU 的平滑性更友好）。下表汇总了主流激活函数：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llp{5.5cm}@{}}
@@ -164,7 +172,7 @@ L = \mathcal{L}(\hat{y},\, y), \qquad
 \]
 核心优化器对比：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lll@{}}
@@ -282,7 +290,7 @@ h_t = (1-z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t
 \subsection{Transformer：范式革命}
 注意力的思想并非一夜出现：2014 年 Bahdanau 等人在机器翻译中引入注意力以缓解 RNN 的信息瓶颈（Luong et al., 2015 简化为其点积形式），2017 年 Google 论文 \textbf{“Attention is All You Need”}（Vaswani et al.）将注意力推广为\emph{全部}序列交互机制，彻底改变了深度学习格局：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lll@{}}
@@ -303,7 +311,7 @@ h_t = (1-z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t
 注意力机制让任意两个位置之间的信息传递只需 \textbf{1 步}，而 RNN 需要 $O(T)$ 步。这使得并行训练成为可能，是深度学习进入“规模时代”的根本原因。没有 Transformer 的并行性，就没有 GPT、LLaMA 等百亿/千亿参数模型。
 \end{keybox}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{%
 \input{figs/fig03_architecture_timeline}
@@ -318,7 +326,7 @@ h_t = (1-z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t
 \subsection{标准 Transformer 架构}
 一个完整的 Transformer Block 包含\textbf{两个子层}：多头自注意力 + 前馈网络，每个子层都有\textbf{残差连接}和\textbf{归一化}：
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig04_transformer_block}
 \caption{现代 decoder-only Transformer Block（Pre-Norm 结构）：每个子层先归一化再计算，残差连接提供无衰减的梯度“高速公路”；整个 Block 以 $\times N$ 堆叠，末端 LM Head 将隐状态映射回词表。}
@@ -342,7 +350,7 @@ h_t = (1-z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t
   \item 空间复杂度：$O(n^2)$（注意力矩阵）
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig05_attention_pipeline}
 \caption{自注意力计算流水线：一个输入经三路投影产生 $Q,K,V$；相似度经缩放与 Softmax 归一化后对 $V$ 加权求和得到单头输出；$h$ 个头并行执行后拼接、经 $W^O$ 融合回残差流。}
@@ -373,7 +381,7 @@ h_t = (1-z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t
 \subsection{位置编码}
 Transformer 本身不包含位置信息，需要外部注入。下表汇总了主要方案：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lll@{}}
@@ -420,7 +428,7 @@ q_m^\top k_n = q^\top R_{n-m}^{\top} R_n \, k = q^\top R_{n-m} \, k
 \textbf{长上下文外推}是 RoPE 的工程延伸：模型在 4K 上下文上训练后要在 128K 上使用，直接外推会导致注意力分数在训练时从未见过的相位组合上“失准”。NTK-aware scaling 通过降低基频 $\theta_i$（等效拉伸频谱）让远距位置落在训练分布的邻域内；YaRN（NTK-by-parts）进一步对高/低频分段处理，兼顾局部精度与长程外推，已成为 2025 年 128K--1M 长上下文方案的常用组件——配合训练时的长文本课程（curriculum）使用，效果最佳。
 
 \subsection{解码器 vs 编码器}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llll@{}}
@@ -450,7 +458,7 @@ M_{ij} = \begin{cases} 0 & \text{if } i \leq j \\ -\infty & \text{if } i > j \en
 
 LLM 的训练通常分为\textbf{三个核心阶段}：预训练 $\to$ 监督微调 $\to$ 人类对齐。下面逐一展开。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig06_training_pipeline}
 \caption{LLM 训练流水线三阶段：成本与数据规模逐级递减，而“行为塑造”的杠杆逐级增大；虚线反馈构成持续迭代的数据飞轮。}
@@ -483,7 +491,7 @@ LLM 的训练通常分为\textbf{三个核心阶段}：预训练 $\to$ 监督微
 \subsubsection{分布式训练策略}
 大规模 LLM 训练需要数千张 GPU 协同工作，核心策略包括：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lll@{}}
@@ -628,7 +636,7 @@ P(y_w \succ y_l \mid x) = \sigma\!\left(r_\phi(x, y_w) - r_\phi(x, y_l)\right)
 
 \textbf{DPO 的直觉}：注意 $\beta \log \frac{\pi_\theta(y|x)}{\pi_{\text{ref}}(y|x)}$ 恰好是 RLHF 目标下\emph{隐式奖励}的闭式解（RLHF 的最优策略满足 $\pi^*(y|x) \propto \pi_{\text{ref}}(y|x)\, e^{r(x,y)/\beta}$，反解即得 $r = \beta \log \frac{\pi^*}{\pi_{\text{ref}}} + \text{const}$）。因此 DPO 相当于把奖励模型“吸收”进策略网络：不再单独训练 RM，而是直接以“相对参考模型的隐式偏好差”为监督信号优化策略。代价是它只能利用\emph{离线偏好对}，无法在线采样——当分布偏移大时效果弱于在线 RL（如 GRPO），这也是 2025 年“在线 RL 回归”趋势的背景（见第 7 章 DeepSeek-R1）。
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llll@{}}
@@ -685,7 +693,7 @@ GRPO & 组相对策略优化 & DeepSeek 2025 & —\\
 
 \textbf{核心思想}：FFN 层拆分为 $N$ 个“专家”，每个 token 只激活 Top-$K$ 个专家，实现\textbf{稀疏激活}。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \resizebox{0.97\textwidth}{!}{%
 \input{figs/fig07_moe_layer}
@@ -701,7 +709,7 @@ GRPO & 组相对策略优化 & DeepSeek 2025 & —\\
 \alpha_i = \text{softmax}(\text{Router}(\mathbf{x}))_i
 \]
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llll@{}}
@@ -773,7 +781,7 @@ h_t = \bar{A}\, h_{t-1} + \bar{B}\, x_t, \qquad y_t = C\, h_t
 
 \subsection{代表性架构创新}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lp{5.6cm}p{4.6cm}@{}}
@@ -802,7 +810,7 @@ Llama 4 & 大规模 MoE + 长上下文 & 开源旗舰（评测有争议）\\
 
 LLM 推理分两个阶段，瓶颈完全不同：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llll@{}}
@@ -818,7 +826,7 @@ Decode & 逐 token 生成 & 访存密集 & KV Cache 优化、推测解码\\
 
 \textbf{分析工具：算术强度}（Arithmetic Intensity, FLOPs/Byte）。Prefill 阶段，一个长度为 $n$ 的 prompt 前向时，权重只需读取一次却参与 $n$ 次运算，算术强度 $\propto n$，轻松超过硬件的“计算/访存平衡点”（如 H100 BF16 约 $989\,\text{TFLOPS} / 3.35\,\text{TB/s} \approx 295$ FLOP/Byte），属于\emph{计算受限}；Decode 阶段每个 token 都要把全部权重重新读一遍，算术强度 $\approx 1$（权重为主时），远低于平衡点，属于\emph{访存受限}。这一判据直接推出两条优化主线：\emph{Prefill 拼算力}（FlashAttention、算子融合、FP8），\emph{Decode 拼带宽}（KV Cache 压缩、量化、推测解码“一次读权重出多个 token”）。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig08_inference_system}
 \caption{LLM 推理系统全景：Prefill 与 Decode 瓶颈不同、优化路径不同，中间的 KV Cache 是两条路径的交汇点；底座是所有主流引擎共享的服务层技术栈（详见 6.2--6.6 节）。}
@@ -843,7 +851,7 @@ Decode & 逐 token 生成 & 访存密集 & KV Cache 优化、推测解码\\
 
 \subsection{量化技术}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llll@{}}
@@ -880,7 +888,7 @@ INT4 & 25\% & 1--3\% & 移动端\\
 
 \subsection{推理引擎与系统优化}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}ll@{}}
@@ -934,7 +942,7 @@ MLX & Apple Silicon 优化\\
 \]
 这一“第三扩展轴”（参数 $N$、数据 $D$、推理算力 $R$）是 2025--2026 年大模型竞争的主战场（详见第 10 章）。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig09_testtime_compute}
 \caption{Test-time Compute 的典型收益曲线（示意）：在对数思考预算下，准确率先呈近似幂律爬升，随后进入饱和区——这决定了“思考预算”产品必须按任务难度动态定价，而非无脑拉满。}
@@ -945,7 +953,7 @@ MLX & Apple Silicon 优化\\
 
 \subsection{代表性推理模型}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llp{5cm}@{}}
@@ -964,7 +972,7 @@ Gemini Thinking & 类 o1 推理 & 原生多模态推理\\
 
 \subsubsection{DeepSeek-R1 的核心创新}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig10_r1_pipeline}
 \caption{DeepSeek-R1 四阶段训练流水线：橙色虚线是 R1-Zero 的对照路径（验证“纯 RL 涌现推理”）；蓝色实线展示蒸馏路线——小模型无需自己跑 RL，直接继承 R1 的推理模式。}
@@ -994,7 +1002,7 @@ R1-Zero（跳过冷启动、直接 RL）实验证明推理能力可从基座“�
 
 \subsection{过程奖励模型（PRM）}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}ll@{}}
@@ -1050,7 +1058,7 @@ ORM（结果奖励） & 只看最终答案对不对\\
 
 \subsection{架构范式}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{%
 \input{figs/fig11_multimodal_architecture}
@@ -1071,7 +1079,7 @@ ORM（结果奖励） & 只看最终答案对不对\\
 
 \subsection{视觉语言模型（VLM）}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}llp{4.5cm}@{}}
@@ -1148,7 +1156,7 @@ Gemini 2.5/3 & 原生多模态 + Deep Think & 文本+图+音+视频统一\\
 
 \textbf{2025--2026 年的四个新焦点}：(1)\textbf{Agent 与提示注入}——模型能“执行动作”之后，间接提示注入从“内容风险”升级为“执行风险”（被投毒的网页/文档/工具描述可诱导 Agent 泄露数据或执行恶意操作），OWASP LLM Top 10 与多国安全机构均将其列为一号威胁，防御转向权限最小化、人机确认（human-in-the-loop）、沙箱执行与动作审计；(2)\textbf{CoT 忠实度}——推理模型的可见思考链未必反映真实决策依据，把“监控思考链”本身作为安全机制存在系统性风险（Anthropic 2025 年委托的独立研究对此发出明确警告）；(3)\textbf{模型混淆与来源}——AI 生成内容的水印/显隐式标识（中国《标识办法》、C2PA 内容凭证、Google SynthID 类水印）从技术选项变成合规义务；(4)\textbf{攻防自动化}——LLM 驱动的自动化越狱与自动化红队同时成熟，安全水位从“发布时达标”转向“持续运营指标”。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{%
 \input{figs/fig12_defense_in_depth}
@@ -1159,7 +1167,7 @@ Gemini 2.5/3 & 原生多模态 + Deep Think & 文本+图+音+视频统一\\
 
 \subsection{关键安全挑战}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}ll@{}}
@@ -1231,7 +1239,7 @@ DeepMind 用更严格的控制变量（固定算力预算，扫描不同 $N/D$ �
 \end{itemize}
 \textbf{综合判断}：Scaling Law 的“第四轴”——\emph{推理时算力}（第 7 章）已与参数、数据并列；2025--2026 年的共识公式是“\textbf{更少激活参数 + 更多高质量（含合成）数据 + 更长思考时间}”。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig13_scaling_laws}
 \caption{Scaling Law 的示意曲线（对数-对数坐标下近似直线）：在同等算力预算下，“数据等比”路线（Chinchilla）优于“参数优先”路线；数据质量与合成数据可将整条曲线进一步下压。}
@@ -1279,7 +1287,7 @@ CCH 断言，固定预算下的能力收敛到“访问完备混合体”这一�
 
 CCH 把上述论断锚定在一个\textbf{见证任务}上：\textbf{无限流中的牛顿苹果问题}——在无限延长的 token 流中，某个时刻一个“苹果落地”式的具体事件被写入历史；模型既要在任意久之后仍能\textbf{逐字回查}该事件的内容与位置，又要在整条流上维持\textbf{运行状态}（计数、聚合、状态跟踪）。“召回 + 状态跟踪”这一复合任务原语的识别来自 Rawat et al.（2026）的实证。在固定预算且无链式思考（no-CoT）的条件下，任何单一通道架构都会撞上至少一堵\textbf{资源之墙}：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering\small
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}p{4.8cm}>{\raggedright\arraybackslash}p{7.2cm}@{}}
 \toprule
@@ -1298,7 +1306,7 @@ CCH 把上述论断锚定在一个\textbf{见证任务}上：\textbf{无限流�
 
 \textbf{预注册实验}：这篇论文最值得业界学习的是方法论纪律——\textbf{在数据冻结前冻结判据}。三项预测如期命中：\textbf{剪刀差}被精确测得（64 个标量的压缩态在精确回查任务上错误率 0.994，仅增加一层全局注意力后骤降至 0.000）；状态跟踪能力的分岔正好落在预注册边界上；合取见证任务显示出不可约的双通道解。另有一项预测失败且方向反转，作者如实报告。论文同样明确区分\emph{已证明的}与\emph{仍是猜想的}：访问完备性原理基于信息论下界与预注册实验，而“领域级能力收敛趋势”只是经济学动机的猜想——这种自我设限的写法，与 10.1 节的评测方法论（度量伪影、基准污染）互为呼应。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \resizebox{0.97\textwidth}{!}{%
 \input{figs/fig14_cch_access_structure}
@@ -1311,7 +1319,7 @@ CCH 把上述论断锚定在一个\textbf{见证任务}上：\textbf{无限流�
 
 CCH 提供了一个把本报告多个章节串起来的统一视角——\emph{过去十年的许多“架构创新”，本质上都是在为这两条通道支付账单或扩展账本}：
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering\small
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -1334,7 +1342,7 @@ $O(1)$ 压缩态通道 & 线性注意力 / SSM（Mamba）；RNN 遗产 & 第 2�
 
 \subsection{未来方向（2025--2030）}
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}ll@{}}
@@ -1365,7 +1373,7 @@ Agent 协议（MCP） & Agent 连接工具/数据的事实标准（2026）\\
 
 \textbf{本章三条主线}：(1)\textbf{推理与 Agent 成为产品主形态}——o1$\to$o3、R1、Gemini thinking 系列把“思考预算”做成产品开关，Operator/Computer Use 把“执行动作”做成标准能力；(2)\textbf{开源与闭源差距收敛}——Qwen3、Llama 4、DeepSeek 系列在核心基准上逼近同期闭源旗舰，开源阵营首次具备“生产级推理模型”选项；(3)\textbf{算力与生态整合加速}——NVIDIA 的纵向整合（芯片$\to$框架$\to$生态）、云厂商的自研芯片（TPU v6、Trainium 2/3）与数据中心扩张构成基础设施主战场。
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \small
 \begin{tabular}{@{}lp{6.2cm}p{4.4cm}@{}}
@@ -1449,7 +1457,7 @@ NVIDIA & B200/GB200、约 \$12.9B 收购 Hugging Face（2026-08） & 算力 + �
 
 图~\ref{fig:flywheel} 从系统视角把六层串成一个闭环：数据经训练变成模型，模型经部署触达应用，应用产生交互数据与安全信号回流——\emph{大模型竞争的本质是飞轮转速之争}。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \input{figs/fig15_data_flywheel}
 \caption{大模型技术栈的运行闭环：每一轮迭代都在为下一轮积累数据与评估资产。飞轮各环节分别对应第 4 章（训练）、第 5--6 章（模型与部署）、第 8 章（应用形态）与第 9 章（评测与安全）。}
